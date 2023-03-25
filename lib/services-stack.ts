@@ -3,7 +3,6 @@ import { Construct } from "constructs";
 import { SharedService } from "./constructs/shared-service";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as path from "path";
-import { ApplicationService } from "./constructs/application-service";
 import { TenantOnboarding } from "./constructs/tenant-onboarding";
 
 export interface ServicesStackProps extends StackProps {
@@ -64,36 +63,6 @@ export class ServicesStack extends Stack {
         new CfnOutput(this, "UserManagementRepository", {
             value: userMgmtSvc.codeRepositoryUrl
         });
-
-
-        // application services
-
-        const productSvc = new ApplicationService(this, "ProductService", {
-            internalApiDomain: props.internalNLBApiDomain,
-            eksClusterName: props.eksClusterName,
-            codebuildKubectlRole: role,
-            name: "ProductService",
-            ecrImageName: "product-svc",
-            serviceUrlPrefix: "products",
-            assetDirectory: path.join(__dirname, "..", "services", "application-services", "product-service")
-        });
-        new CfnOutput(this, "ProductServiceRepository", {
-            value: productSvc.codeRepositoryUrl
-        });
-
-        const orderSvc = new ApplicationService(this, "OrderService", {
-            internalApiDomain: props.internalNLBApiDomain,
-            eksClusterName: props.eksClusterName,
-            codebuildKubectlRole: role,
-            name: "OrderService",
-            ecrImageName: "order-svc",
-            serviceUrlPrefix: "orders",
-            assetDirectory: path.join(__dirname, "..", "services", "application-services", "order-service")
-        });
-        new CfnOutput(this, "OrderServiceRepository", {
-            value: orderSvc.codeRepositoryUrl
-        });
-
 
         // tenant onboarding service
 

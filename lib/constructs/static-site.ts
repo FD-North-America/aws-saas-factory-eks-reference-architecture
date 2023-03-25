@@ -62,7 +62,8 @@ export class StaticSite extends Construct {
         repository.applyRemovalPolicy(RemovalPolicy.DESTROY);
         this.repositoryUrl = repository.repositoryCloneUrlHttp;
 
-        const { distribution, appBucket } = this.createStaticSite(id, props.allowedMethods, useCustomDomain, props.customDomain, props.certDomain, props.hostedZone);
+        const { distribution, appBucket } = this.createStaticSite(
+            id, props.allowedMethods, useCustomDomain, props.customDomain, props.certDomain, props.hostedZone);
         this.cloudfrontDistribution = distribution;
         this.siteBucket = appBucket;
         this.siteDomain = useCustomDomain ? props.customDomain! : distribution.domainName;

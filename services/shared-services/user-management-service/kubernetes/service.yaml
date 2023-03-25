@@ -55,3 +55,17 @@ spec:
                   number: 80
             path: /users
             pathType: Prefix
+          - backend:
+              service:
+                name: user-management-service
+                port:
+                  number: 80
+            path: /roles
+            pathType: Prefix
+          - backend:
+              service:
+                name: user-management-service
+                port:
+                  number: 80
+            path: /permissions
+            pathType: Prefix

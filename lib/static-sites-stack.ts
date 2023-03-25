@@ -32,7 +32,6 @@ export class StaticSitesStack extends Stack {
             zoneName: props.customBaseDomain!
         }) : undefined;
 
-
         // Landing site
         const landingSite = new StaticSite(this, "LandingSite", {
             name: "LandingSite",
@@ -55,7 +54,6 @@ export class StaticSitesStack extends Stack {
         new CfnOutput(this, `LandingSiteUrl`, {
             value: `https://${landingSite.siteDomain}`
         });
-
 
         // Admin site
         const adminSite = new StaticSite(this, "AdminSite", {
@@ -86,7 +84,6 @@ export class StaticSitesStack extends Stack {
         new CfnOutput(this, `AdminSiteUrl`, {
             value: `https://${adminSite.siteDomain}`
         });
-
 
         // Application site
         const applicationSite = new StaticSite(this, "ApplicationSite", {

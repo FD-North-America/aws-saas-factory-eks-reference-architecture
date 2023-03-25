@@ -1,41 +1,20 @@
-/*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this
- * software and associated documentation files (the "Software"), to deal in the Software
- * without restriction, including without limitation the rights to use, copy, modify,
- * merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
- * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
- * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
- * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
 package com.amazonaws.saas.eks.controller;
 
-import java.util.List;
+import javax.validation.Valid;
 
-import javax.servlet.http.HttpServletRequest;
-
+import com.amazonaws.saas.eks.auth.JwtAuthManager;
+import com.amazonaws.saas.eks.auth.dto.TenantUser;
+import com.amazonaws.saas.eks.dto.requests.product.*;
+import com.amazonaws.saas.eks.dto.responses.product.ListProductResponse;
+import com.amazonaws.saas.eks.dto.responses.product.ProductResponse;
+import com.amazonaws.saas.eks.model.Permission;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
-import com.amazonaws.saas.eks.auth.TokenManager;
-import com.amazonaws.saas.eks.model.Product;
 import com.amazonaws.saas.eks.service.ProductService;
 
 @CrossOrigin(origins = "*", allowedHeaders = "*")
@@ -44,159 +23,78 @@ public class ProductController {
 	private static final Logger logger = LogManager.getLogger(ProductController.class);
 
 	@Autowired
-	private ProductService productService;
+	private JwtAuthManager jwtAuthManager;
 
 	@Autowired
-	private TokenManager tokenManager;
+	private ProductService productService;
 
-	/**
-	 * Method to retrieve all products for a tenant.
-	 * 
-	 * @param request
-	 * @return List<Product>
-	 */
-	@GetMapping(value = "{companyName}/products", produces = { MediaType.APPLICATION_JSON_VALUE })
-	public List<Product> getProducts(HttpServletRequest request) {
-		String tenantId = null;
-		List<Product> products = null;
-
+	@PreAuthorize("hasAnyAuthority('" + Permission.PRODUCT_CREATE + "')")
+	@PostMapping(value = "{tenantId}/products", produces = { MediaType.APPLICATION_JSON_VALUE })
+	public ProductResponse create(@RequestBody @Valid CreateProductRequest request) {
 		try {
-			tenantId = tokenManager.getTenantId(request);
-
-			if (tenantId != null && !tenantId.isEmpty()) {
-				products = productService.getProducts(tenantId);
-				return products;
-			}
+			TenantUser tu = jwtAuthManager.getTenantUser();
+			return productService.create(tu.getTenantId(), request);
 		} catch (Exception e) {
-			logger.error("TenantId: " + tenantId + "-get products failed: ", e);
-			return null;
+			logger.error("Error creating product", e);
+			throw e;
 		}
-
-		return products;
 	}
 
-	/**
-	 * Method that retrieves a tenant product by productId.
-	 * 
-	 * @param productId
-	 * @param request
-	 * @return Product
-	 */
-	@GetMapping(value = "{companyName}/products/{productId}", produces = {
-			MediaType.APPLICATION_JSON_VALUE })
-	public Product getProductById(@PathVariable("productId") String productId, HttpServletRequest request) {
-		String tenantId = null;
-		Product product = null;
-
+	@PreAuthorize("hasAnyAuthority('" + Permission.PRODUCT_READ + "')")
+	@GetMapping(value = "{tenantId}/products", produces = {MediaType.APPLICATION_JSON_VALUE})
+	public ListProductResponse getAll(@Valid ListProductRequestParams params) {
 		try {
-			tenantId = tokenManager.getTenantId(request);
-
-			if (tenantId != null && !tenantId.isEmpty()) {
-				product = productService.getProductById(productId, tenantId);
-				return product;
-			}
+			TenantUser tu = jwtAuthManager.getTenantUser();
+			return productService.getAll(tu.getTenantId(), params);
 		} catch (Exception e) {
-			logger.error("TenantId: " + tenantId + "-get product by ID failed: ", e);
+			logger.error("Error listing products", e);
+			throw e;
 		}
-
-		return product;
 	}
 
-	/**
-	 * Method to save the tenant product
-	 * 
-	 * @param product
-	 * @param request
-	 * @return Product
-	 */
-	@PostMapping(value = "{companyName}/products", produces = { MediaType.APPLICATION_JSON_VALUE })
-	public Product saveProduct(@RequestBody Product product, HttpServletRequest request) {
-		String tenantId = null;
-		Product newProduct = new Product();
-
+	@PreAuthorize("hasAnyAuthority('" + Permission.PRODUCT_READ + "')")
+	@GetMapping(value = "{tenantId}/products/{productId}", produces = {MediaType.APPLICATION_JSON_VALUE })
+	public ProductResponse get(@PathVariable("productId") String productId) {
 		try {
-			tenantId = tokenManager.getTenantId(request);
-
-			if (tenantId != null && !tenantId.isEmpty()) {
-				newProduct.setTenantId(tenantId);
-				newProduct.setName(product.getName());
-				newProduct.setPrice(product.getPrice());
-				newProduct.setPictureUrl(product.getPictureUrl());
-
-				newProduct = productService.save(newProduct);
-				return newProduct;
-			}
+			TenantUser tu = jwtAuthManager.getTenantUser();
+			return productService.get(tu.getTenantId(), productId);
 		} catch (Exception e) {
-			logger.error("TenantId: " + tenantId + "-save product failed: ", e);
+			logger.error("Product not found with ID: " + productId, e);
+			throw e;
 		}
-
-		return newProduct;
 	}
 
-	/**
-	 * Method to update a tenant product
-	 * 
-	 * @param product
-	 * @param request
-	 * @return Product
-	 */
-	@PutMapping(value = "{companyName}/products", produces = { MediaType.APPLICATION_JSON_VALUE })
-	public Product updateProduct(@RequestBody Product product, HttpServletRequest request) {
-		String tenantId = null;
-		Product updateProduct = new Product();
-
+	@PreAuthorize("hasAnyAuthority('" + Permission.PRODUCT_UPDATE + "')")
+	@PutMapping(value = "{tenantId}/products/{productId}", produces = {MediaType.APPLICATION_JSON_VALUE})
+	public ProductResponse update(@PathVariable("productId") String productId,
+								  @RequestBody @Valid UpdateProductRequest request) {
 		try {
-			tenantId = tokenManager.getTenantId(request);
-
-			if (tenantId != null && !tenantId.isEmpty()) {
-				updateProduct.setProductId(product.getProductId());
-				updateProduct.setTenantId(tenantId);
-				updateProduct.setName(product.getName());
-				updateProduct.setPrice(product.getPrice());
-				updateProduct.setPictureUrl(product.getPictureUrl());
-
-				updateProduct = productService.update(updateProduct);
-				return updateProduct;
-			}
+			TenantUser tu = jwtAuthManager.getTenantUser();
+			return productService.update(tu.getTenantId(), productId, request);
 		} catch (Exception e) {
-			logger.error("TenantId: " + tenantId + "-update product failed: ", e);
+			logger.error("Error updating product", e);
+			throw e;
 		}
-
-		return updateProduct;
 	}
 
-	/**
-	 * Method to delete a tenant product
-	 * 
-	 * @param product
-	 * @param request
-	 */
-	@DeleteMapping(value = "{companyName}/products")
-	public void deleteProduct(@RequestBody Product product, HttpServletRequest request) {
-		String tenantId = null;
-
+	@PreAuthorize("hasAnyAuthority('" + Permission.PRODUCT_DELETE + "')")
+	@DeleteMapping(value = "{tenantId}/products/{productId}", produces = {MediaType.APPLICATION_JSON_VALUE})
+	public void delete(@PathVariable("productId") String productId) {
 		try {
-			tenantId = tokenManager.getTenantId(request);
-
-			if (tenantId != null && !tenantId.isEmpty()) {
-				product.setTenantId(tenantId);
-				productService.delete(product);
-			} else {
-				logger.error("TenantId: " + tenantId + "-Invalid tenant. Delete unsuccessful");
-			}
+			TenantUser tu = jwtAuthManager.getTenantUser();
+			productService.delete(tu.getTenantId(), productId);
 		} catch (Exception e) {
-			logger.error("TenantId: " + tenantId + "-delete product failed: ", e);
+			logger.error("Error deleting product", e);
+			throw e;
 		}
 	}
 
 	/**
-	 * Hearbeat method to check if product service is up and running
+	 * Heartbeat method to check if product service is up and running
 	 * 
-	 * @return
 	 */
-	@RequestMapping("{tenantId}/products/health")
+	@GetMapping(value = "{tenantId}/products/health")
 	public String health() {
 		return "\"Product service is up!\"";
 	}
-
 }
