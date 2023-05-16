@@ -18,7 +18,7 @@ spec:
         - name: payment
           image: KUSTOMIZE_IMAGE
           ports:
-            - containerPort: 5001
+            - containerPort: 5002
               name: "http"
 ---
 apiVersion: v1
@@ -32,7 +32,7 @@ spec:
     - name: http
       protocol: TCP
       port: 80
-      targetPort: 5001
+      targetPort: 5002
   type: NodePort
 
 ---
