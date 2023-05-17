@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: report
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: report
+  template:
+    metadata:
+      labels:
+        app: report
+    spec:
+      serviceAccountName: KUSTOMIZE_SVC_ACCOUNT_NAME
+      automountServiceAccountToken: true
+      containers:
+        - name: report
+          image: KUSTOMIZE_IMAGE
+          ports:
+            - containerPort: 5003
+              name: "http"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: report-service
+spec:
+  selector:
+    app: report
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 5003
+  type: NodePort
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: report-service-ingress
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.org/mergeable-ingress-type: "minion"
+spec:
+  rules:
+    - host: KUSTOMIZE_API_HOST
+      http:
+        paths:
+          - path: /KUSTOMIZE_TENANT/reports
+            backend:
+              service:
+                name: report-service
+                port:
+                  number: 80
+            pathType: Prefix
