@@ -7,6 +7,7 @@ import { ServicesStack } from '../lib/services-stack';
 import { AppServicesStack } from '../lib/app-services-stack';
 import { CommonResourcesStack } from '../lib/common-resources-stack';
 import { ApiStack } from '../lib/api-stack';
+import { AppServiceStack } from '../lib/app-service-stack';
 
 const env = {
     account: process.env.AWS_ACCOUNT_ID,
@@ -94,3 +95,35 @@ const appSvcStack = new AppServicesStack(app, 'AppServices', {
 });
 appSvcStack.addDependency(clusterStack, "EKSSaaSCluster dependency");
 appSvcStack.addDependency(apiStack, "SaaSApi dependency");
+
+// const clusterStack = {
+//     nlbDomain: "a7080937dc7414b0386f6053f63798c5-b2cf4b80ed225f3d.elb.us-west-1.amazonaws.com",
+//     openIdConnectProviderArn: "arn:aws:iam::486225280130:oidc-provider/oidc.eks.us-west-1.amazonaws.com/id/A6445047C39C25DEFD8B32F42BB63721",
+//     codebuildKubectlRoleArn: "arn:aws:iam::486225280130:role/EKSSaaSCluster-CodebuildKubectlRole7B5A6607-9W1VQPZYUWD4"
+
+// }
+// const sitesStack = {
+//     applicationSiteDistribution: {
+//         distributionId: "E1D4X3J094EWEA",
+//         distributionDomainName: "d2mnyqdjzt0dnw.cloudfront.net"
+//     }
+// }
+
+const serviceName = "ReportService";
+const singleAppSvcStack = new AppServiceStack(app, serviceName, {
+    env,
+    internalNLBApiDomain: clusterStack.nlbDomain,
+    eksClusterName: clusterName,
+    eksClusterOIDCProviderArn: clusterStack.openIdConnectProviderArn,
+    codebuildKubectlRoleArn: clusterStack.codebuildKubectlRoleArn,
+    appSiteDistributionId: sitesStack.applicationSiteDistribution.distributionId,
+    appSiteCloudFrontDomain: sitesStack.applicationSiteDistribution.distributionDomainName,
+    sharedServiceAccountName: sharedServiceAccountName,
+    appHostedZoneId: hostedZoneId,
+    customDomain: customDomain,
+    
+    serviceName: serviceName,
+    ecrImageName: "report-svc",
+    serviceUrlPrefix: "reports",
+    serviceSourceDir: "report-service"
+});
