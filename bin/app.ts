@@ -109,8 +109,8 @@ appSvcStack.addDependency(apiStack, "SaaSApi dependency");
 //     }
 // }
 
-const serviceName = "ReportService";
-const singleAppSvcStack = new AppServiceStack(app, serviceName, {
+const reportServiceName = "ReportService";
+const reportSingleAppSvcStack = new AppServiceStack(app, reportServiceName, {
     env,
     internalNLBApiDomain: clusterStack.nlbDomain,
     eksClusterName: clusterName,
@@ -122,8 +122,27 @@ const singleAppSvcStack = new AppServiceStack(app, serviceName, {
     appHostedZoneId: hostedZoneId,
     customDomain: customDomain,
     
-    serviceName: serviceName,
+    serviceName: reportServiceName,
     ecrImageName: "report-svc",
     serviceUrlPrefix: "reports",
     serviceSourceDir: "report-service"
+});
+
+const cashDrawerServiceName = "CashDrawerService";
+const cashDrawerSingleAppSvcStack = new AppServiceStack(app, cashDrawerServiceName, {
+    env,
+    internalNLBApiDomain: clusterStack.nlbDomain,
+    eksClusterName: clusterName,
+    eksClusterOIDCProviderArn: clusterStack.openIdConnectProviderArn,
+    codebuildKubectlRoleArn: clusterStack.codebuildKubectlRoleArn,
+    appSiteDistributionId: sitesStack.applicationSiteDistribution.distributionId,
+    appSiteCloudFrontDomain: sitesStack.applicationSiteDistribution.distributionDomainName,
+    sharedServiceAccountName: sharedServiceAccountName,
+    appHostedZoneId: hostedZoneId,
+    customDomain: customDomain,
+    
+    serviceName: cashDrawerServiceName,
+    ecrImageName: "cashdrawer-svc",
+    serviceUrlPrefix: "cashdrawers",
+    serviceSourceDir: "cashdrawer-service"
 });
