@@ -1,0 +1,17 @@
+package com.amazonaws.saas.eks.dto.responses.cashdrawers;
+
+import lombok.Getter;
+import lombok.Setter;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class ListCashDrawersResponse {
+    @Getter
+    @Setter
+    private List<CashDrawerResponse> cashDrawers = new ArrayList<>();
+
+    @Getter
+    @Setter
+    private long count;
+}
