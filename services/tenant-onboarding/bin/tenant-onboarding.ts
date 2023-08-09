@@ -5,7 +5,7 @@ import { TenantOnboardingStack } from '../lib/tenant-onboarding-stack';
 
 const env = {
   account: process.env.AWS_ACCOUNT,
-  region: process.env.AWS_REGION
+  region: process.env.AWS_REGION,
 };
 
 const appCustomDomain = process.env.APP_SITE_CUSTOM_DOMAIN && process.env.APP_SITE_CUSTOM_DOMAIN.length > 0 ? process.env.APP_SITE_CUSTOM_DOMAIN : undefined;
@@ -19,4 +19,5 @@ new TenantOnboardingStack(app, `TenantStack-${process.env.TENANT_ID}`, {
   plan: process.env.PLAN!,
   customDomain: appCustomDomain,
   hostedZoneId: appHostedZoneId,
+  tenantId: process.env.TENANT_ID,
 });

@@ -18,6 +18,7 @@ export interface TenantOnboardingStackProps extends StackProps {
     readonly plan: string
     readonly customDomain?: string
     readonly hostedZoneId?: string
+    readonly tenantId?: string
 }
 
 export class TenantOnboardingStack extends Stack {
@@ -148,7 +149,12 @@ export class TenantOnboardingStack extends Stack {
             inviteEmailSubject: `Login for ${companyName.valueAsString}`,
             inviteEmailBody: `Your username is {username} and temporary password is {####}. Please login here: ${appSiteBaseUrl}`,
             customAttributes: {
-                "tenant-id": { value: tenantId.valueAsString, mutable: false },
+                "tenant-id": { value: tenantId.valueAsString, mutable: false, maxLen: 2048 },
+                "city": { value: "-", mutable: true, maxLen: 256 },
+                "country": { value: "-", mutable: true, maxLen: 256 },
+                "home_phone": { value: "-", mutable: true, maxLen: 256 },
+                "state": { value: "-", mutable: true, maxLen: 256 },
+                "zip": { value: "-", mutable: true, maxLen: 256 }
             }
         });
 
@@ -227,8 +233,8 @@ export class TenantOnboardingStack extends Stack {
 
         // create service account for tenant
         const tenantServiceAccount = cluster.addServiceAccount(`TenantServiceAccount`, {
-            name: `${tenantId.valueAsString}-service-account`,
-            namespace: tenantId.valueAsString
+            name: `${props.tenantId}-service-account`,
+            namespace: props.tenantId
         });
 
         // permission for order and product tables

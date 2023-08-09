@@ -6,7 +6,7 @@ export interface CognitoProps {
     readonly adminUserEmailAddress: string;
     readonly userPoolName: string;
 
-    readonly customAttributes?: { [key: string]: { value: boolean | number | string, mutable: boolean } };
+    readonly customAttributes?: { [key: string]: { value: boolean | number | string, mutable: boolean, maxLen: number } };
     readonly callbackUrl?: string;
     readonly signoutUrl?: string;
     readonly inviteEmailSubject?: string;
@@ -37,7 +37,7 @@ export class Cognito extends Construct {
                         customAttributes![key] = new cognito.NumberAttribute({ mutable: item.mutable });
                         break;
                     case "string":
-                        customAttributes![key] = new cognito.StringAttribute({ mutable: item.mutable });
+                        customAttributes![key] = new cognito.StringAttribute({ mutable: item.mutable, maxLen: item.maxLen });
                         break;
                 }
             });
@@ -45,7 +45,7 @@ export class Cognito extends Construct {
 
         const userPool = new cognito.UserPool(this, 'UserPool', {
             userPoolName: props.userPoolName,
-            selfSignUpEnabled: false,
+            selfSignUpEnabled: true,
             userInvitation: {
                 emailBody: props.inviteEmailBody,
                 emailSubject: props.inviteEmailSubject
@@ -55,18 +55,18 @@ export class Cognito extends Construct {
                 requireDigits: true,
                 requireLowercase: true,
                 requireUppercase: true,
-                requireSymbols: false,
+                requireSymbols: true,
                 tempPasswordValidity: Duration.days(7),
             },
             signInAliases: {
                 email: true,
-                username: false
+                username: true
             },
             autoVerify: {
                 email: true
             },
             customAttributes: customAttributes,
-            accountRecovery: cognito.AccountRecovery.NONE,
+            accountRecovery: cognito.AccountRecovery.PHONE_AND_EMAIL,
             mfa: cognito.Mfa.OFF,
             removalPolicy: RemovalPolicy.DESTROY
         });
@@ -126,7 +126,7 @@ export class Cognito extends Construct {
 
         const admin = new cognito.CfnUserPoolUser(this, 'AdminUser', {
             userPoolId: userPool.userPoolId,
-            username: props.adminUserEmailAddress,
+            username: "admin",
             userAttributes: userAttributes,
             desiredDeliveryMediums: [
                 "EMAIL"
