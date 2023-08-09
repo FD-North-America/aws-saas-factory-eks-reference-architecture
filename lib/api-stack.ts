@@ -33,13 +33,20 @@ export class ApiStack extends Stack {
             }) :
             undefined;
 
-        const apiCertificate = useCustomDomain ?
-            new acm.DnsValidatedCertificate(this, 'ApiCertificate', {
+        // const apiCertificate = useCustomDomain ?
+        //     new acm.DnsValidatedCertificate(this, 'ApiCertificate', {
+        //         domainName: `api.${props.customDomain!}`,
+        //         hostedZone: publicHostedZone!,
+        //         region: 'us-east-1',
+        //     }) :
+        //     undefined;
+
+        const apiCertificate = useCustomDomain
+            ? new acm.Certificate(this, 'ApiCertificate', {
                 domainName: `api.${props.customDomain!}`,
-                hostedZone: publicHostedZone!,
-                region: 'us-east-1',
-            }) :
-            undefined;
+                validation: acm.CertificateValidation.fromDns(publicHostedZone)
+            })
+            : undefined;
 
         const nlbSubdomain = Fn.select(0, Fn.split(".", props.internalNLBDomain));
         const nlbSubdomainParts = Fn.split("-", nlbSubdomain);
