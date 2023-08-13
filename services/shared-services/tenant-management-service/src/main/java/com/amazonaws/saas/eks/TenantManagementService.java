@@ -143,7 +143,7 @@ public class TenantManagementService {
 	 * @return AuthConfig
 	 */
 	public AuthConfig auth(String tenantId) {
-		logger.info("Received tenantId=>" + tenantId + "for lookup.");
+//		logger.info("Received tenantId=>" + tenantId + "for lookup.");
 
 		AuthConfig auth = new AuthConfig();
 		String table_name = TENANT;
@@ -156,6 +156,10 @@ public class TenantManagementService {
 
 			auth.setIssuer((String) item.get("AUTH_SERVER"));
 			auth.setStrictDiscoveryDocumentValidation(false);
+
+			String[] issuerParts = auth.getIssuer().split("/");
+			auth.setUserPoolId(issuerParts[issuerParts.length - 1]);
+
 			auth.setClientId((String) item.get("AUTH_CLIENT_ID"));
 			auth.setResponseType("code");
 			auth.setRedirectUri((String) item.get("AUTH_REDIRECT_URI"));
@@ -170,8 +174,8 @@ public class TenantManagementService {
 			auth.setNonceStateSeparator("semicolon");
 			auth.setCognitoDomain((String) item.get("COGNITO_DOMAIN"));
 
-			logger.info("Printing AuthConfig after retrieving it....");
-			logger.info(item.toJSONPretty());
+//			logger.info("Printing AuthConfig after retrieving it....");
+//			logger.info(item.toJSONPretty());
 
 		} catch (Exception e) {
 			logger.error("GetItem failed during Auth Config values retrieval");

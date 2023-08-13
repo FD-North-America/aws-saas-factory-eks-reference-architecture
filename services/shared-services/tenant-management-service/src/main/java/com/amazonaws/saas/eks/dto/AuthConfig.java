@@ -23,6 +23,7 @@ public class AuthConfig implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private String issuer;
 	private Boolean strictDiscoveryDocumentValidation;
+	private String userPoolId;
 	private String clientId;
 	private String responseType;
 	private String redirectUri;
@@ -51,6 +52,14 @@ public class AuthConfig implements Serializable {
 
 	public void setStrictDiscoveryDocumentValidation(Boolean strictDiscoveryDocumentValidation) {
 		this.strictDiscoveryDocumentValidation = strictDiscoveryDocumentValidation;
+	}
+
+	public String getUserPoolId() {
+		return userPoolId;
+	}
+
+	public void setUserPoolId(String userPoolId) {
+		this.userPoolId = userPoolId;
 	}
 
 	public String getClientId() {

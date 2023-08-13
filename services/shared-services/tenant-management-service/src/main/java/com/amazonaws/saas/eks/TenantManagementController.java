@@ -94,7 +94,7 @@ public class TenantManagementController {
 		AuthConfig result = null;
 		try {
 			String tenantId = getTenantId(request);
-			logger.info("Tenant Id => " + tenantId);
+//			logger.info("Tenant Id => " + tenantId);
 
 			TenantManagementService mgmt = new TenantManagementService();
 			result = mgmt.auth(tenantId);
