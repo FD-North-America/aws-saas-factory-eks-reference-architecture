@@ -1,12 +1,11 @@
 package com.amazonaws.saas.eks.service;
 
-import com.amazonaws.saas.eks.dto.requests.cashdrawers.CreateCashDrawerRequest;
-import com.amazonaws.saas.eks.dto.requests.cashdrawers.ListCashDrawersRequestParams;
-import com.amazonaws.saas.eks.dto.requests.cashdrawers.UpdateCashDrawerRequest;
-import com.amazonaws.saas.eks.dto.responses.cashdrawers.CashDrawerResponse;
-import com.amazonaws.saas.eks.dto.responses.cashdrawers.checkout.CheckoutDetailsResponse;
-import com.amazonaws.saas.eks.dto.responses.cashdrawers.checkout.ListCashDrawerAdminResponse;
-import com.amazonaws.saas.eks.dto.responses.cashdrawers.ListCashDrawersResponse;
+import com.amazonaws.saas.eks.cashdrawer.dto.requests.CreateCashDrawerRequest;
+import com.amazonaws.saas.eks.cashdrawer.dto.requests.ListCashDrawersRequestParams;
+import com.amazonaws.saas.eks.cashdrawer.dto.requests.UpdateCashDrawerRequest;
+import com.amazonaws.saas.eks.cashdrawer.dto.responses.CashDrawerResponse;
+import com.amazonaws.saas.eks.cashdrawer.dto.responses.ListCashDrawersResponse;
+import com.amazonaws.saas.eks.cashdrawer.dto.responses.checkout.CheckoutDetailsResponse;
 
 public interface CashDrawerService {
     CashDrawerResponse create(CreateCashDrawerRequest request, String tenantId);
@@ -19,7 +18,7 @@ public interface CashDrawerService {
 
     ListCashDrawersResponse getAll(ListCashDrawersRequestParams params, String tenantId);
 
-    ListCashDrawerAdminResponse getAllAdmin(ListCashDrawersRequestParams params, String tenantId);
-
     CheckoutDetailsResponse getCheckoutDetails(String cashDrawerId, String tenantId);
+
+    ListCashDrawersResponse getByAssignedUser(String username, String tenantId);
 }

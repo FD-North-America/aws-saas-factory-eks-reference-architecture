@@ -146,3 +146,22 @@ const cashDrawerSingleAppSvcStack = new AppServiceStack(app, cashDrawerServiceNa
     serviceUrlPrefix: "cashdrawers",
     serviceSourceDir: "cashdrawer-service"
 });
+
+const customerServiceName = "CustomerService";
+const customerSingleAppSvcStack = new AppServiceStack(app, customerServiceName, {
+    env,
+    internalNLBApiDomain: clusterStack.nlbDomain,
+    eksClusterName: clusterName,
+    eksClusterOIDCProviderArn: clusterStack.openIdConnectProviderArn,
+    codebuildKubectlRoleArn: clusterStack.codebuildKubectlRoleArn,
+    appSiteDistributionId: sitesStack.applicationSiteDistribution.distributionId,
+    appSiteCloudFrontDomain: sitesStack.applicationSiteDistribution.distributionDomainName,
+    sharedServiceAccountName: sharedServiceAccountName,
+    appHostedZoneId: hostedZoneId,
+    customDomain: customDomain,
+    
+    serviceName: customerServiceName,
+    ecrImageName: "customer-svc",
+    serviceUrlPrefix: "customers",
+    serviceSourceDir: "customer-service"
+});

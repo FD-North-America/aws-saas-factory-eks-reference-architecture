@@ -1,6 +1,6 @@
 commonLabels:
   saas/tenant: "true"
-  saas/service: cashdrawer
+  saas/service: customer
 resources:
 - service.yaml
 patchesJson6902:
@@ -9,19 +9,19 @@ patchesJson6902:
     group: networking.k8s.io
     version: v1
     kind: Ingress
-    name: cashdrawer-service-ingress
+    name: customer-service-ingress
 - path: path-patch.yaml
   target:
     group: networking.k8s.io
     version: v1
     kind: Ingress
-    name: cashdrawer-service-ingress
+    name: customer-service-ingress
 - path: svc-acc-patch.yaml
   target:
     group: apps
     version: v1
     kind: Deployment
-    name: cashdrawer
+    name: customer
 
 images:
 - name: KUSTOMIZE_IMAGE

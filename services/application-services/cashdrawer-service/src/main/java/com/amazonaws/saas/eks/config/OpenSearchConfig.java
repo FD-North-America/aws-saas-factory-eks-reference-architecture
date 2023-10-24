@@ -16,7 +16,9 @@ public class OpenSearchConfig {
     @Value("${aoss.host}")
     private String host;
 
-    private static final Region REGION = Region.US_EAST_1;
+    @Value("${aoss.region}")
+    private String region;
+
     private static final String SIGNING_NAME = "aoss";
 
     @Bean(name = "openSearchClient")
@@ -28,7 +30,7 @@ public class OpenSearchConfig {
                         httpClient,
                         host,
                         SIGNING_NAME,
-                        REGION,
+                        Region.of(region),
                         AwsSdk2TransportOptions.builder().build()));
     }
 }

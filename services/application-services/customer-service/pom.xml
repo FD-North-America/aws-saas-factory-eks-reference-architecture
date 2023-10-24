@@ -3,8 +3,8 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.amazonaws.saas.eks</groupId>
-	<artifactId>cashdrawer-service</artifactId>
-	<version>1.0.7</version>
+	<artifactId>customer-service</artifactId>
+	<version>1.0.0</version>
 	<packaging>war</packaging>
 
 	<parent>
@@ -62,16 +62,6 @@
 			<groupId>com.amazonaws.saas.eks</groupId>
 			<artifactId>auth</artifactId>
 			<version>1.0.9</version>
-		</dependency>
-		<dependency>
-			<groupId>com.amazonaws.saas.eks</groupId>
-			<artifactId>cashdrawer-domain</artifactId>
-			<version>1.0.21</version>
-		</dependency>
-		<dependency>
-			<groupId>com.amazonaws.saas.eks</groupId>
-			<artifactId>order-domain</artifactId>
-			<version>1.0.26-SNAPSHOT</version>
 		</dependency>
 		<!-- -->
 

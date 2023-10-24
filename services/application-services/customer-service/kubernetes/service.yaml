@@ -1,45 +1,45 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: cashdrawer
+  name: customer
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: cashdrawer
+      app: customer
   template:
     metadata:
       labels:
-        app: cashdrawer
+        app: customer
     spec:
       serviceAccountName: KUSTOMIZE_SVC_ACCOUNT_NAME
       automountServiceAccountToken: true
       containers:
-        - name: cashdrawer
+        - name: customer
           image: KUSTOMIZE_IMAGE
           ports:
-            - containerPort: 5004
+            - containerPort: 5005
               name: "http"
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: cashdrawer-service
+  name: customer-service
 spec:
   selector:
-    app: cashdrawer
+    app: customer
   ports:
     - name: http
       protocol: TCP
       port: 80
-      targetPort: 5004
+      targetPort: 5005
   type: NodePort
 
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: cashdrawer-service-ingress
+  name: customer-service-ingress
   annotations:
     kubernetes.io/ingress.class: "nginx"
     nginx.org/mergeable-ingress-type: "minion"
@@ -48,10 +48,10 @@ spec:
     - host: KUSTOMIZE_API_HOST
       http:
         paths:
-          - path: /KUSTOMIZE_TENANT/cashdrawers
+          - path: /KUSTOMIZE_TENANT/customers
             backend:
               service:
-                name: cashdrawer-service
+                name: customer-service
                 port:
                   number: 80
             pathType: Prefix

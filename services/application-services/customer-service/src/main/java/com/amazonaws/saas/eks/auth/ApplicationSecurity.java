@@ -37,8 +37,8 @@ public class ApplicationSecurity extends WebSecurityConfigurerAdapter {
 		http.headers().cacheControl();
 
 		http.authorizeRequests()
-				.antMatchers("**/cashdrawers/health").permitAll()
-				.antMatchers("**/cashdrawers/**").authenticated();
+				.antMatchers("**/customers/health").permitAll()
+				.antMatchers("**/customers/**").authenticated();
 
 		http.exceptionHandling()
 				.authenticationEntryPoint(

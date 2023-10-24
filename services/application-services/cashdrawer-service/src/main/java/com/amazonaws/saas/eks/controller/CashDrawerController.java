@@ -2,14 +2,13 @@ package com.amazonaws.saas.eks.controller;
 
 import com.amazonaws.saas.eks.auth.JwtAuthManager;
 import com.amazonaws.saas.eks.auth.dto.TenantUser;
-import com.amazonaws.saas.eks.dto.requests.cashdrawers.CreateCashDrawerRequest;
-import com.amazonaws.saas.eks.dto.requests.cashdrawers.ListCashDrawersRequestParams;
-import com.amazonaws.saas.eks.dto.requests.cashdrawers.UpdateCashDrawerRequest;
-import com.amazonaws.saas.eks.dto.responses.cashdrawers.CashDrawerResponse;
-import com.amazonaws.saas.eks.dto.responses.cashdrawers.checkout.CheckoutDetailsResponse;
-import com.amazonaws.saas.eks.dto.responses.cashdrawers.checkout.ListCashDrawerAdminResponse;
-import com.amazonaws.saas.eks.dto.responses.cashdrawers.ListCashDrawersResponse;
-import com.amazonaws.saas.eks.model.Permission;
+import com.amazonaws.saas.eks.cashdrawer.dto.requests.CreateCashDrawerRequest;
+import com.amazonaws.saas.eks.cashdrawer.dto.requests.ListCashDrawersRequestParams;
+import com.amazonaws.saas.eks.cashdrawer.dto.requests.UpdateCashDrawerRequest;
+import com.amazonaws.saas.eks.cashdrawer.dto.responses.CashDrawerResponse;
+import com.amazonaws.saas.eks.cashdrawer.dto.responses.checkout.CheckoutDetailsResponse;
+import com.amazonaws.saas.eks.cashdrawer.dto.responses.ListCashDrawersResponse;
+import com.amazonaws.saas.eks.cashdrawer.model.Permission;
 import com.amazonaws.saas.eks.service.CashDrawerService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,8 +30,8 @@ public class CashDrawerController {
     @Autowired
     private JwtAuthManager jwtAuthManager;
 
-    @PreAuthorize("hasAnyAuthority('" + Permission.CASH_DRAWER_CREATE + "')")
-    @PostMapping(value = "{tenantId}/orders/cash-drawers", produces = { MediaType.APPLICATION_JSON_VALUE })
+    @PreAuthorize("hasAnyAuthority('" + Permission.CASH_DRAWER_CREATE + "', '" + Permission.CASH_DRAWER_CHECKOUT_CLERK_CREATE + "')")
+    @PostMapping(value = "{tenantId}/cashdrawers", produces = { MediaType.APPLICATION_JSON_VALUE })
     public CashDrawerResponse create(@RequestBody @Valid CreateCashDrawerRequest request) {
         try {
             TenantUser tu = jwtAuthManager.getTenantUser();
@@ -43,20 +42,20 @@ public class CashDrawerController {
         }
     }
 
-    @PreAuthorize("hasAnyAuthority('" + Permission.CASH_DRAWER_READ + "')")
-    @GetMapping(value = "{tenantId}/orders/cash-drawers/{cashDrawerId}", produces = { MediaType.APPLICATION_JSON_VALUE })
-    public CashDrawerResponse get(@PathVariable("cashDrawerId") String cashDrawerId) {
+    @PreAuthorize("hasAnyAuthority('" + Permission.CASH_DRAWER_READ + "', '" + Permission.SERVER_CASH_DRAWER_READ + "', '" + Permission.CASH_DRAWER_CHECKOUT_CLERK_READ + "')")
+    @GetMapping(value = "{tenantId}/cashdrawers/{cashDrawerId}", produces = { MediaType.APPLICATION_JSON_VALUE })
+    public CashDrawerResponse get(@PathVariable("tenantId") String tenantId,
+                                  @PathVariable("cashDrawerId") String cashDrawerId) {
         try {
-            TenantUser tu = jwtAuthManager.getTenantUser();
-            return cashDrawerService.get(cashDrawerId, tu.getTenantId());
+            return cashDrawerService.get(cashDrawerId, tenantId);
         } catch (Exception e) {
             logger.error(String.format("Cash Drawer not found with ID: %s", cashDrawerId), e);
             throw e;
         }
     }
 
-    @PreAuthorize("hasAnyAuthority('" + Permission.CASH_DRAWER_UPDATE + "')")
-    @PutMapping(value = "{tenantId}/orders/cash-drawers/{cashDrawerId}", produces = { MediaType.APPLICATION_JSON_VALUE })
+    @PreAuthorize("hasAnyAuthority('" + Permission.CASH_DRAWER_UPDATE + "', '" + Permission.CASH_DRAWER_CHECKOUT_CLERK_UPDATE + "')")
+    @PutMapping(value = "{tenantId}/cashdrawers/{cashDrawerId}", produces = { MediaType.APPLICATION_JSON_VALUE })
     public CashDrawerResponse update(@PathVariable("cashDrawerId") String cashDrawerId,
                                      @RequestBody @Valid UpdateCashDrawerRequest request) {
         try {
@@ -68,8 +67,8 @@ public class CashDrawerController {
         }
     }
 
-    @PreAuthorize("hasAnyAuthority('" + Permission.CASH_DRAWER_DELETE + "')")
-    @DeleteMapping(value = "{tenantId}/orders/cash-drawers/{cashDrawerId}", produces = { MediaType.APPLICATION_JSON_VALUE })
+    @PreAuthorize("hasAnyAuthority('" + Permission.CASH_DRAWER_DELETE + "', '" + Permission.CASH_DRAWER_CHECKOUT_CLERK_DELETE + "')")
+    @DeleteMapping(value = "{tenantId}/cashdrawers/{cashDrawerId}", produces = { MediaType.APPLICATION_JSON_VALUE })
     public void delete(@PathVariable String cashDrawerId) {
         try {
             TenantUser tu = jwtAuthManager.getTenantUser();
@@ -80,8 +79,8 @@ public class CashDrawerController {
         }
     }
 
-    @PreAuthorize("hasAnyAuthority('" + Permission.CASH_DRAWER_READ + "')")
-    @GetMapping(value = "{tenantId}/orders/cash-drawers", produces = { MediaType.APPLICATION_JSON_VALUE })
+    @PreAuthorize("hasAnyAuthority('" + Permission.CASH_DRAWER_READ + "', '" + Permission.CASH_DRAWER_CHECKOUT_CLERK_READ + "')")
+    @GetMapping(value = "{tenantId}/cashdrawers", produces = { MediaType.APPLICATION_JSON_VALUE })
     public ListCashDrawersResponse getAll(@Valid ListCashDrawersRequestParams params) {
         try {
             TenantUser tu = jwtAuthManager.getTenantUser();
@@ -92,20 +91,8 @@ public class CashDrawerController {
         }
     }
 
-    @PreAuthorize("hasAnyAuthority('" + Permission.CASH_DRAWER_CHECKOUT_READ + "')")
-    @GetMapping(value = "{tenantId}/orders/cash-drawers/checkout", produces = { MediaType.APPLICATION_JSON_VALUE })
-    public ListCashDrawerAdminResponse getAllAdmin(@Valid ListCashDrawersRequestParams params) {
-        try {
-            TenantUser tu = jwtAuthManager.getTenantUser();
-            return cashDrawerService.getAllAdmin(params, tu.getTenantId());
-        } catch (Exception e) {
-            logger.error("Error listing cash drawers admin view", e);
-            throw e;
-        }
-    }
-
-    @PreAuthorize("hasAnyAuthority('" + Permission.CASH_DRAWER_CHECKOUT_READ + "')")
-    @GetMapping(value = "{tenantId}/orders/cash-drawers/{cashDrawerId}/checkout", produces = { MediaType.APPLICATION_JSON_VALUE })
+    @PreAuthorize("hasAnyAuthority('" + Permission.CASH_DRAWER_CHECKOUT_READ + "', '" + Permission.CASH_DRAWER_CHECKOUT_CLERK_READ + "')")
+    @GetMapping(value = "{tenantId}/cashdrawers/{cashDrawerId}/checkout", produces = { MediaType.APPLICATION_JSON_VALUE })
     public CheckoutDetailsResponse getCheckoutDetails(@PathVariable String cashDrawerId) {
         try {
             TenantUser tu = jwtAuthManager.getTenantUser();
@@ -114,5 +101,26 @@ public class CashDrawerController {
             logger.error("Error getting checkout details for cash drawer", e);
             throw e;
         }
+    }
+
+    @PreAuthorize("hasAnyAuthority('" + Permission.CASH_DRAWER_READ + "', '" + Permission.SERVER_CASH_DRAWER_READ + "', '" + Permission.CASH_DRAWER_CHECKOUT_CLERK_READ + "')")
+    @GetMapping(value = "{tenantId}/cashdrawers/users/{username}", produces = { MediaType.APPLICATION_JSON_VALUE })
+    public ListCashDrawersResponse getByAssignedUsers(@PathVariable String tenantId,
+                                                      @PathVariable String username) {
+        try {
+            return cashDrawerService.getByAssignedUser(username, tenantId);
+        } catch (Exception e) {
+            logger.error("Error getting cash drawers by username");
+            throw e;
+        }
+    }
+
+    /**
+     * Heartbeat method to check if cash-drawer service is up and running
+     *
+     */
+    @RequestMapping("{tenantId}/cashdrawers/health")
+    public String health() {
+        return "\"CashDrawer service is up!\"";
     }
 }
