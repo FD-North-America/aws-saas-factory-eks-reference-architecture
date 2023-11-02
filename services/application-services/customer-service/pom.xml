@@ -56,12 +56,17 @@
 		<dependency>
 			<groupId>com.amazonaws.saas.eks</groupId>
 			<artifactId>error-handling</artifactId>
-			<version>1.0.19</version>
+			<version>1.0.27</version>
 		</dependency>
 		<dependency>
 			<groupId>com.amazonaws.saas.eks</groupId>
 			<artifactId>auth</artifactId>
 			<version>1.0.9</version>
+		</dependency>
+		<dependency>
+			<groupId>com.amazonaws.saas.eks</groupId>
+			<artifactId>customer-domain</artifactId>
+			<version>1.0.0</version>
 		</dependency>
 		<!-- -->
 
