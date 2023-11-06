@@ -165,3 +165,22 @@ const customerSingleAppSvcStack = new AppServiceStack(app, customerServiceName, 
     serviceUrlPrefix: "customers",
     serviceSourceDir: "customer-service"
 });
+
+const settingsServiceName = "SettingsService";
+const settingsSingleAppSvcStack = new AppServiceStack(app, settingsServiceName, {
+    env,
+    internalNLBApiDomain: clusterStack.nlbDomain,
+    eksClusterName: clusterName,
+    eksClusterOIDCProviderArn: clusterStack.openIdConnectProviderArn,
+    codebuildKubectlRoleArn: clusterStack.codebuildKubectlRoleArn,
+    appSiteDistributionId: sitesStack.applicationSiteDistribution.distributionId,
+    appSiteCloudFrontDomain: sitesStack.applicationSiteDistribution.distributionDomainName,
+    sharedServiceAccountName: sharedServiceAccountName,
+    appHostedZoneId: hostedZoneId,
+    customDomain: customDomain,
+    
+    serviceName: settingsServiceName,
+    ecrImageName: "settings-svc",
+    serviceUrlPrefix: "settings",
+    serviceSourceDir: "settings-service"
+});
