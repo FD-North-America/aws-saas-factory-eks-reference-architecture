@@ -1,12 +1,14 @@
 package com.amazonaws.saas.eks.service.impl;
 
-import com.amazonaws.saas.eks.dto.requests.volumepricing.CreateVolumePricingRequest;
-import com.amazonaws.saas.eks.dto.requests.volumepricing.ListVolumePricingRequestParams;
-import com.amazonaws.saas.eks.dto.requests.volumepricing.UpdateVolumePricingRequest;
-import com.amazonaws.saas.eks.dto.responses.volumepricing.ListVolumePricingResponse;
-import com.amazonaws.saas.eks.dto.responses.volumepricing.VolumePricingResponse;
-import com.amazonaws.saas.eks.mapper.VolumePricingMapper;
-import com.amazonaws.saas.eks.model.*;
+import com.amazonaws.saas.eks.product.dto.requests.volumepricing.CreateVolumePricingRequest;
+import com.amazonaws.saas.eks.product.dto.requests.volumepricing.ListVolumePricingRequestParams;
+import com.amazonaws.saas.eks.product.dto.requests.volumepricing.UpdateVolumePricingRequest;
+import com.amazonaws.saas.eks.product.dto.responses.volumepricing.ListVolumePricingResponse;
+import com.amazonaws.saas.eks.product.dto.responses.volumepricing.VolumePricingResponse;
+import com.amazonaws.saas.eks.product.mapper.VolumePricingMapper;
+import com.amazonaws.saas.eks.product.model.Product;
+import com.amazonaws.saas.eks.product.model.UOM;
+import com.amazonaws.saas.eks.product.model.VolumePricing;
 import com.amazonaws.saas.eks.repository.ProductRepository;
 import com.amazonaws.saas.eks.repository.UOMRepository;
 import com.amazonaws.saas.eks.repository.VolumePricingRepository;
@@ -70,7 +72,7 @@ public class VolumePricingServiceImpl implements VolumePricingService {
     public ListVolumePricingResponse getAll(String tenantId, ListVolumePricingRequestParams params) {
         ListVolumePricingResponse response = new ListVolumePricingResponse();
 
-        List<VolumePricing> volumePricingList = volumePricingRepository.getAll(tenantId, params.getProductId());
+        List<VolumePricing> volumePricingList = volumePricingRepository.getByProductId(tenantId, params.getProductId());
         for (VolumePricing vp : volumePricingList) {
             VolumePricingResponse vpr = VolumePricingMapper.INSTANCE.volumePricingToVolumePricingResponse(vp);
             response.getVolumePricingList().add(vpr);
@@ -85,7 +87,7 @@ public class VolumePricingServiceImpl implements VolumePricingService {
         UOM uom = uomRepository.get(tenantId, volumePricing.getUomId());
         Product product = productRepository.get(tenantId, uom.getProductId());
 
-        if (!StringUtils.isEmpty(request.getBreakPointName())) {
+        if (StringUtils.hasLength(request.getBreakPointName())) {
             volumePricing.setBreakPointName(request.getBreakPointName());
         }
 
@@ -97,7 +99,7 @@ public class VolumePricingServiceImpl implements VolumePricingService {
             updatePrice = true;
         }
 
-        if (!StringUtils.isEmpty(request.getMode())) {
+        if (StringUtils.hasLength(request.getMode())) {
             volumePricing.setMode(request.getMode());
         }
 

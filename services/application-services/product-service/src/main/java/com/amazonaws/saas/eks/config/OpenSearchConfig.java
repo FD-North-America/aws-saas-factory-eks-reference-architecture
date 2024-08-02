@@ -3,6 +3,7 @@ package com.amazonaws.saas.eks.config;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.transport.aws.AwsSdk2Transport;
 import org.opensearch.client.transport.aws.AwsSdk2TransportOptions;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -13,8 +14,12 @@ import software.amazon.awssdk.regions.Region;
 @Configuration
 public class OpenSearchConfig {
 
-    // TODO: MOVE TO CONFIG
-    private static final String HOST = "iiaunxut51eeses1x1h5.us-east-1.aoss.amazonaws.com";
+    @Value( "${aoss.host}" )
+    private String host;
+
+    @Value("${aoss.region}")
+    private String region;
+
     private static final String SIGNING_NAME = "aoss";
 
     @Bean(name = "openSearchClient")
@@ -24,9 +29,9 @@ public class OpenSearchConfig {
         return new OpenSearchClient(
                 new AwsSdk2Transport(
                         httpClient,
-                        HOST,
+                        host,
                         SIGNING_NAME,
-                        Region.US_EAST_1,
+                        Region.of(region),
                         AwsSdk2TransportOptions.builder().build()));
     }
 }

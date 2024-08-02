@@ -20,6 +20,9 @@ spec:
           ports:
             - containerPort: 5000
               name: "http"
+          env:
+          - name: AOSS_HOST
+            value: AOSS_HOST_VALUE
 ---
 apiVersion: v1
 kind: Service
@@ -48,7 +51,14 @@ spec:
     - host: KUSTOMIZE_API_HOST
       http:
         paths:
-          - path: /KUSTOMIZE_TENANT_NAME/products
+          - path: /KUSTOMIZE_TENANT/products
+            backend:
+              service:
+                name: product-service
+                port:
+                  number: 80
+            pathType: Prefix
+          - path: /KUSTOMIZE_TENANT/vendors
             backend:
               service:
                 name: product-service

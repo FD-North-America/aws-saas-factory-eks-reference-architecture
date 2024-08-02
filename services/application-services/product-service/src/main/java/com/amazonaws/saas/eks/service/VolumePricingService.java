@@ -1,10 +1,11 @@
 package com.amazonaws.saas.eks.service;
 
-import com.amazonaws.saas.eks.dto.requests.volumepricing.CreateVolumePricingRequest;
-import com.amazonaws.saas.eks.dto.requests.volumepricing.ListVolumePricingRequestParams;
-import com.amazonaws.saas.eks.dto.requests.volumepricing.UpdateVolumePricingRequest;
-import com.amazonaws.saas.eks.dto.responses.volumepricing.ListVolumePricingResponse;
-import com.amazonaws.saas.eks.dto.responses.volumepricing.VolumePricingResponse;
+
+import com.amazonaws.saas.eks.product.dto.requests.volumepricing.CreateVolumePricingRequest;
+import com.amazonaws.saas.eks.product.dto.requests.volumepricing.ListVolumePricingRequestParams;
+import com.amazonaws.saas.eks.product.dto.requests.volumepricing.UpdateVolumePricingRequest;
+import com.amazonaws.saas.eks.product.dto.responses.volumepricing.ListVolumePricingResponse;
+import com.amazonaws.saas.eks.product.dto.responses.volumepricing.VolumePricingResponse;
 
 public interface VolumePricingService {
     VolumePricingResponse create(String tenantId, CreateVolumePricingRequest request);

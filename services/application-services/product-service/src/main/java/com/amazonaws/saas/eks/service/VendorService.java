@@ -1,10 +1,11 @@
 package com.amazonaws.saas.eks.service;
 
-import com.amazonaws.saas.eks.dto.requests.vendor.CreateVendorRequest;
-import com.amazonaws.saas.eks.dto.requests.vendor.ListVendorsRequestParams;
-import com.amazonaws.saas.eks.dto.requests.vendor.UpdateVendorRequest;
-import com.amazonaws.saas.eks.dto.responses.vendor.ListVendorResponse;
-import com.amazonaws.saas.eks.dto.responses.vendor.VendorResponse;
+
+import com.amazonaws.saas.eks.product.dto.requests.vendor.CreateVendorRequest;
+import com.amazonaws.saas.eks.product.dto.requests.vendor.ListVendorsRequestParams;
+import com.amazonaws.saas.eks.product.dto.requests.vendor.UpdateVendorRequest;
+import com.amazonaws.saas.eks.product.dto.responses.vendor.ListVendorResponse;
+import com.amazonaws.saas.eks.product.dto.responses.vendor.VendorResponse;
 
 public interface VendorService {
     VendorResponse create(String tenantId, CreateVendorRequest request);

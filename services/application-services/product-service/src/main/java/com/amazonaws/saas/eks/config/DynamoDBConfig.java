@@ -20,7 +20,8 @@ public class DynamoDBConfig {
 		return new DynamoDBMapper(dynamoClient, dbMapperConfig);
 	}
 
-	private AmazonDynamoDB getAmazonDynamoDBLocalClient() {
+	@Bean(name = "dynamoDBClient")
+	public AmazonDynamoDB getAmazonDynamoDBLocalClient() {
 		return AmazonDynamoDBClientBuilder.standard().withCredentials(new DefaultAWSCredentialsProviderChain()).build();
 	}
 }

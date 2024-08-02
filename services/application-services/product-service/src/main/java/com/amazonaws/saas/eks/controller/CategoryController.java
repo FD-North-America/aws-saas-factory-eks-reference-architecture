@@ -2,12 +2,12 @@ package com.amazonaws.saas.eks.controller;
 
 import com.amazonaws.saas.eks.auth.JwtAuthManager;
 import com.amazonaws.saas.eks.auth.dto.TenantUser;
-import com.amazonaws.saas.eks.dto.requests.category.CreateCategoryRequest;
-import com.amazonaws.saas.eks.dto.requests.category.ListCategoriesRequestParams;
-import com.amazonaws.saas.eks.dto.requests.category.UpdateCategoryRequest;
-import com.amazonaws.saas.eks.dto.responses.category.CategoryResponse;
-import com.amazonaws.saas.eks.dto.responses.category.ListCategoriesResponse;
-import com.amazonaws.saas.eks.model.Permission;
+import com.amazonaws.saas.eks.product.dto.requests.category.CreateCategoryRequest;
+import com.amazonaws.saas.eks.product.dto.requests.category.ListCategoriesRequestParams;
+import com.amazonaws.saas.eks.product.dto.requests.category.UpdateCategoryRequest;
+import com.amazonaws.saas.eks.product.dto.responses.category.CategoryResponse;
+import com.amazonaws.saas.eks.product.dto.responses.category.ListCategoriesResponse;
+import com.amazonaws.saas.eks.product.model.Permission;
 import com.amazonaws.saas.eks.service.CategoryService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -61,7 +61,7 @@ public class CategoryController {
             TenantUser tu = jwtAuthManager.getTenantUser();
             return categoryService.get(tu.getTenantId(), categoryId);
         } catch (Exception e) {
-            logger.error("Category not found with ID: " + categoryId, e);
+            logger.error(String.format("Category not found with ID: %s", categoryId), e);
             throw e;
         }
     }

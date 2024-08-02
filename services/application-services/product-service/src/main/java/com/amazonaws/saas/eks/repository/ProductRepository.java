@@ -3,53 +3,36 @@ package com.amazonaws.saas.eks.repository;
 import com.amazonaws.saas.eks.exception.ProductExistsException;
 import com.amazonaws.saas.eks.exception.ProductNotFoundException;
 import com.amazonaws.saas.eks.exception.ProductSearchException;
-import com.amazonaws.saas.eks.model.EntityType;
-import com.amazonaws.saas.eks.model.Product;
-import com.amazonaws.saas.eks.model.DynamoDbStreamRecord;
-import com.amazonaws.saas.eks.model.ProductSearchResponse;
+import com.amazonaws.saas.eks.exception.SearchException;
+import com.amazonaws.saas.eks.product.model.Product;
+import com.amazonaws.saas.eks.product.model.ProductSearchResponse;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression;
+import com.amazonaws.services.dynamodbv2.datamodeling.KeyPair;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.MapperFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.opensearch.client.opensearch.OpenSearchClient;
-import org.opensearch.client.opensearch._types.*;
-import org.opensearch.client.opensearch._types.query_dsl.BoolQuery;
-import org.opensearch.client.opensearch._types.query_dsl.MatchQuery;
-import org.opensearch.client.opensearch._types.query_dsl.Query;
+import org.opensearch.client.opensearch._types.FieldSort;
+import org.opensearch.client.opensearch._types.FieldValue;
+import org.opensearch.client.opensearch._types.SortOptions;
+import org.opensearch.client.opensearch._types.SortOrder;
+import org.opensearch.client.opensearch._types.query_dsl.*;
 import org.opensearch.client.opensearch.core.SearchRequest;
 import org.opensearch.client.opensearch.core.SearchResponse;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Repository
-public class ProductRepository {
+public class ProductRepository extends BaseRepository {
 	private static final Logger logger = LogManager.getLogger(ProductRepository.class);
-
-	// TODO: MOVE TO CONFIG OR INPUT
-	private static final String STORE_ID = "store1";
-
-	private static final String OPEN_SEARCH_INDEX = "products-index";
-	private static final String OPEN_SEARCH_PARTITION_KEY = "NewImage.PartitionKey.S";
-	private static final String OPEN_SEARCH_CATEGORY_ID = "NewImage.CategoryID.S";
-	private static final String OPEN_SEARCH_VENDOR_ID = "NewImage.VendorID.S";
-	private static final String OPEN_SEARCH_NAME = "NewImage.Name.S";
-	private static final String OPEN_SEARCH_SKU = "NewImage.SKU.S";
-	private static final String OPEN_SEARCH_SORT_NAME = "NewImage.Name.S.keyword";
-	private static final String OPEN_SEARCH_SORT_SKU = "NewImage.SKU.S.keyword";
-	private static final String OPEN_SEARCH_SORT_QOH = "NewImage.QuantityOnHand.N.keyword";
-	private static final String OPEN_SEARCH_SORT_RETAIL_PRICE = "NewImage.RetailPrice.N.keyword";
-	private static final String OPEN_SEARCH_SORT_CATEGORY_NAME = "NewImage.CategoryName.S.keyword";
-	private static final String OPEN_SEARCH_SORT_VENDOR_NAME = "NewImage.VendorName.S.keyword";
+	private static final String PARTITION_KEY_PLACEHOLDER = ":partitionKey";
+	private static final String VENDOR_ID_PLACEHOLDER = ":vendorId";
+	private static final String SKU_PLACEHOLDER = ":sku";
 
 	private static final String SORT_BY_NAME = "name";
 	private static final String SORT_BY_SKU = "sku";
@@ -59,46 +42,59 @@ public class ProductRepository {
 	private static final String SORT_BY_VENDOR_NAME = "vendor_name";
 	private static final String SORT_BY_DESC = "desc";
 
-	@Autowired
-	private DynamoDBMapper mapper;
-
-	@Autowired
-	private OpenSearchClient openSearchClient;
-
 	public Product insert(String tenantId, Product product) {
-		product.setPartitionKey(getPartitionKey(tenantId));
+		DynamoDBMapper mapper = dynamoDBMapper(tenantId);
+
+		product.setPartitionKey(Product.buildPartitionKey(tenantId));
 		mapper.save(product);
 
 		return get(tenantId, product.getId());
 	}
 
 	public Product get(String tenantId, String productId) {
-		Product model = mapper.load(Product.class, getPartitionKey(tenantId), productId);
+		DynamoDBMapper mapper = dynamoDBMapper(tenantId);
+
+		Product model = mapper.load(Product.class, Product.buildPartitionKey(tenantId), productId);
 		if (model == null) {
-			throw new ProductNotFoundException(productId, STORE_ID);
+			throw new ProductNotFoundException(productId, Product.STORE_ID);
 		}
 		return model;
 	}
 
 	public List<Product> getCategoryProducts(String tenantId, String categoryId) {
-		ProductSearchResponse response = search(tenantId, 0, 0, categoryId, null, null, null);
+		ProductSearchResponse response = search(tenantId, 0, 0, categoryId, null, null, null, new ArrayList<>());
 		return response.getProducts();
 	}
 
 	public List<Product> getVendorProducts(String tenantId, String vendorId) {
-		ProductSearchResponse response = search(tenantId, 0, 0, null, vendorId, null, null);
-		return response.getProducts();
+		DynamoDBMapper mapper = dynamoDBMapper(tenantId);
+
+		Map<String, AttributeValue> eav = new HashMap<>();
+		eav.put(PARTITION_KEY_PLACEHOLDER, new AttributeValue().withS(Product.buildPartitionKey(tenantId)));
+		eav.put(VENDOR_ID_PLACEHOLDER, new AttributeValue().withS(vendorId));
+		DynamoDBQueryExpression<Product> query = new DynamoDBQueryExpression<Product>()
+				.withIndexName(Product.DbIndexNames.VENDOR_INDEX)
+				.withConsistentRead(false)
+				.withKeyConditionExpression(String.format("%s = %s AND %s = %s",
+						Product.DbAttrNames.PARTITION_KEY, PARTITION_KEY_PLACEHOLDER,
+						Product.DbAttrNames.VENDOR_ID, VENDOR_ID_PLACEHOLDER))
+				.withExpressionAttributeValues(eav);
+
+		return mapper.query(Product.class, query);
 	}
 
 	public List<Product> getProductBySKU(String tenantId, String sku) {
+		DynamoDBMapper mapper = dynamoDBMapper(tenantId);
+
 		Map<String, AttributeValue> eav = new HashMap<>();
-		eav.put(":partitionKey", new AttributeValue().withS(getPartitionKey(tenantId)));
-		eav.put(":sku", new AttributeValue().withS(sku));
+		eav.put(PARTITION_KEY_PLACEHOLDER, new AttributeValue().withS(Product.buildPartitionKey(tenantId)));
+		eav.put(SKU_PLACEHOLDER, new AttributeValue().withS(sku));
 		DynamoDBQueryExpression<Product> query = new DynamoDBQueryExpression<Product>()
-				.withIndexName(Product.SKU_INDEX)
+				.withIndexName(Product.DbIndexNames.SKU_INDEX)
 				.withConsistentRead(false)
-				.withKeyConditionExpression(String.format("%s = :partitionKey AND %s = :sku",
-						Product.PARTITION_KEY, Product.SKU))
+				.withKeyConditionExpression(String.format("%s = %s AND %s = %s",
+						Product.DbAttrNames.PARTITION_KEY, PARTITION_KEY_PLACEHOLDER,
+						Product.DbAttrNames.SKU, SKU_PLACEHOLDER))
 				.withExpressionAttributeValues(eav);
 
 		return mapper.query(Product.class, query);
@@ -110,42 +106,71 @@ public class ProductRepository {
 										String categoryId,
 										String vendorId,
 										String filter,
-										String sortBy) {
+										String sortBy,
+										List<String> productIds) {
 		try {
-			MatchQuery partitionKeyQuery = new MatchQuery.Builder().field(OPEN_SEARCH_PARTITION_KEY)
-					.query(FieldValue.of(getPartitionKey(tenantId))).build();
+			TermQuery partitionKeyQuery = new TermQuery.Builder()
+					.field(Product.OpenSearch.FieldNames.PARTITION_KEY_KEYWORD)
+					.value(FieldValue.of(Product.buildPartitionKey(tenantId)))
+					.build();
 
 			List<Query> idQueries = new ArrayList<>();
 			idQueries.add(partitionKeyQuery._toQuery());
 
-			if (!StringUtils.isEmpty(categoryId)) {
-				MatchQuery categoryIdQuery = new MatchQuery.Builder().field(OPEN_SEARCH_CATEGORY_ID)
-						.query(FieldValue.of(categoryId)).build();
+			if (StringUtils.hasLength(categoryId)) {
+				TermQuery categoryIdQuery = new TermQuery.Builder()
+						.field(Product.OpenSearch.FieldNames.CATEGORY_ID_KEYWORD)
+						.value(FieldValue.of(categoryId))
+						.build();
 				idQueries.add(categoryIdQuery._toQuery());
 			}
 
-			if (!StringUtils.isEmpty(vendorId)) {
-				MatchQuery vendorIdQuery = new MatchQuery.Builder().field(OPEN_SEARCH_VENDOR_ID)
-						.query(FieldValue.of(vendorId)).build();
+			if (StringUtils.hasLength(vendorId)) {
+				TermQuery vendorIdQuery = new TermQuery.Builder()
+						.field(Product.OpenSearch.FieldNames.VENDOR_ID_KEYWORD)
+						.value(FieldValue.of(vendorId))
+						.build();
 				idQueries.add(vendorIdQuery._toQuery());
 			}
 
 			List<Query> searchQueries = new ArrayList<>();
 			int minShouldMatch = 0;
-			if (!StringUtils.isEmpty(filter)) {
-				MatchQuery nameQuery = new MatchQuery.Builder().field(OPEN_SEARCH_NAME)
-						.query(FieldValue.of(filter)).build();
-				MatchQuery skuQuery = new MatchQuery.Builder().field(OPEN_SEARCH_SKU)
-						.query(FieldValue.of(filter)).build();
+			if (StringUtils.hasLength(filter) || !productIds.isEmpty()) {
+				MatchBoolPrefixQuery nameQuery = new MatchBoolPrefixQuery.Builder()
+						.field(Product.OpenSearch.FieldNames.NAME)
+						.query(filter)
+						.build();
+				MatchBoolPrefixQuery skuQuery = new MatchBoolPrefixQuery.Builder()
+						.field(Product.OpenSearch.FieldNames.SKU)
+						.query(filter)
+						.build();
+				MatchBoolPrefixQuery categoryNameQuery = new MatchBoolPrefixQuery.Builder()
+						.field(Product.OpenSearch.FieldNames.CATEGORY_NAME)
+						.query(filter)
+						.build();
+				MatchBoolPrefixQuery vendorNameQuery = new MatchBoolPrefixQuery.Builder()
+						.field(Product.OpenSearch.FieldNames.VENDOR_NAME)
+						.query(filter)
+						.build();
+
+				for (String pId : productIds) {
+					MatchBoolPrefixQuery pIdQuery = new MatchBoolPrefixQuery.Builder()
+							.field(Product.OpenSearch.FieldNames.SORT_KEY)
+							.query(pId)
+							.build();
+					searchQueries.add(pIdQuery._toQuery());
+				}
 				searchQueries.add(nameQuery._toQuery());
 				searchQueries.add(skuQuery._toQuery());
+				searchQueries.add(categoryNameQuery._toQuery());
+				searchQueries.add(vendorNameQuery._toQuery());
 				minShouldMatch = 1;
 			}
 
 			List<SortOptions> sorting = new ArrayList<>();
-			if (!StringUtils.isEmpty(sortBy)) {
+			if (StringUtils.hasLength(sortBy)) {
 				String field = getOpenSearchSortField(sortBy);
-				if (!StringUtils.isEmpty(field)) {
+				if (StringUtils.hasLength(field)) {
 					SortOrder order = sortBy.contains(SORT_BY_DESC) ? SortOrder.Desc : SortOrder.Asc;
 					FieldSort fieldSort = FieldSort.of(f -> f.field(field).order(order));
 					sorting.add(SortOptions.of(s -> s.field(fieldSort)));
@@ -153,13 +178,13 @@ public class ProductRepository {
 			}
 
 			BoolQuery boolQuery = new BoolQuery.Builder()
-					.must(idQueries)
 					.should(searchQueries)
 					.minimumShouldMatch(String.valueOf(minShouldMatch))
+					.filter(idQueries)
 					.build();
 
 			SearchRequest req = SearchRequest.of(s -> s
-					.index(OPEN_SEARCH_INDEX)
+					.index(Product.OpenSearch.getIndex(tenantId))
 					.query(boolQuery._toQuery())
 					.sort(sorting)
 					.from(from)
@@ -167,10 +192,10 @@ public class ProductRepository {
 			SearchResponse<JsonNode> results = openSearchClient.search(req, JsonNode.class);
 
 			ProductSearchResponse response = new ProductSearchResponse();
-			response.setProducts(convertSearchResultsToProducts(results));
+			response.setProducts(convertSearchResultsToModels(results, Product.class, tenantId));
 			response.setCount(results.hits().total().value());
 			return response;
-			
+
 		} catch (IOException e) {
 			logger.error("Error reading from OpenSearch: ", e);
 			throw new ProductSearchException(tenantId, from, size, categoryId, vendorId, filter, sortBy);
@@ -178,26 +203,36 @@ public class ProductRepository {
 	}
 
 	public Product update(String tenantId, Product product) {
+		DynamoDBMapper mapper = dynamoDBMapper(tenantId);
+
 		Product model = get(tenantId, product.getId());
 
-		if (!StringUtils.isEmpty(product.getName())) {
+		if (StringUtils.hasLength(product.getName())) {
 			model.setName(product.getName());
 		}
 
-		if (!StringUtils.isEmpty(product.getDescription())) {
+		if (StringUtils.hasLength(product.getDescription())) {
 			model.setDescription(product.getDescription());
 		}
 
-		if (!StringUtils.isEmpty(product.getSku())) {
+		if (StringUtils.hasLength(product.getSku())) {
 			if (!product.getSku().equals(model.getSku())) {
 				checkProductExistence(tenantId, product.getSku());
 			}
 			model.setSku(product.getSku());
 		}
 
-		if (!StringUtils.isEmpty(product.getCategoryId())
+		if (StringUtils.hasLength(product.getCategoryId())
 				&& !model.getCategoryId().equals(product.getCategoryId())) {
 			model.setCategoryId(product.getCategoryId());
+			model.setCategoryPath(product.getCategoryPath());
+		}
+
+		if (StringUtils.hasLength(product.getCategoryName())) {
+			model.setCategoryName(product.getCategoryName());
+		}
+
+		if (StringUtils.hasLength(product.getCategoryPath())) {
 			model.setCategoryPath(product.getCategoryPath());
 		}
 
@@ -221,19 +256,19 @@ public class ProductRepository {
 			model.setCost(product.getCost());
 		}
 
-		if (!StringUtils.isEmpty(product.getVendorId())) {
+		if (StringUtils.hasLength(product.getVendorId())) {
 			model.setVendorId(product.getVendorId());
 		}
 
-		if (!StringUtils.isEmpty(product.getType())) {
+		if (StringUtils.hasLength(product.getType())) {
 			model.setType(product.getType());
 		}
 
-		if (!StringUtils.isEmpty(product.getInventoryStatus())) {
+		if (StringUtils.hasLength(product.getInventoryStatus())) {
 			model.setInventoryStatus(product.getInventoryStatus());
 		}
 
-		if (!StringUtils.isEmpty(product.getTaxable())) {
+		if (StringUtils.hasLength(product.getTaxable())) {
 			model.setTaxable(product.getTaxable());
 		}
 
@@ -245,16 +280,20 @@ public class ProductRepository {
 			model.setAgeVerificationRequired(product.getAgeVerificationRequired());
 		}
 
-		if (!StringUtils.isEmpty(product.getStockingUomId())) {
+		if (StringUtils.hasLength(product.getStockingUomId())) {
 			model.setStockingUomId(product.getStockingUomId());
 		}
 
-		if (!StringUtils.isEmpty(product.getQuantityUomId())) {
-			model.setStockingUomId(product.getQuantityUomId());
+		if (StringUtils.hasLength(product.getQuantityUomId())) {
+			model.setQuantityUomId(product.getQuantityUomId());
 		}
 
-		if (!StringUtils.isEmpty(product.getPricingUomId())) {
-			model.setStockingUomId(product.getPricingUomId());
+		if (StringUtils.hasLength(product.getPricingUomId())) {
+			model.setPricingUomId(product.getPricingUomId());
+		}
+
+		if (StringUtils.hasLength(product.getVendorName())) {
+			model.setVendorName(product.getVendorName());
 		}
 
 		model.setModified(new Date());
@@ -265,12 +304,16 @@ public class ProductRepository {
 	}
 
 	public void delete(String tenantId, String id) {
+		DynamoDBMapper mapper = dynamoDBMapper(tenantId);
+
 		Product model = get(tenantId, id);
 
 		mapper.delete(model);
 	}
 
-	public void batchUpdate(List<Product> productsToUpdate) {
+	public void batchUpdate(String tenantId, List<Product> productsToUpdate) {
+		DynamoDBMapper mapper = dynamoDBMapper(tenantId);
+
 		List<Object> objectsToWrite = new ArrayList<>(productsToUpdate);
 		mapper.batchWrite(objectsToWrite, new ArrayList<>());
 	}
@@ -279,50 +322,82 @@ public class ProductRepository {
 		List<Product> products = getProductBySKU(tenantId, sku);
 		if (!products.isEmpty()) {
 			throw new ProductExistsException(products.get(0).getId(),
-					String.format("There is a product with same SKU '%s'", sku), tenantId, STORE_ID);
+					String.format("There is a product with same SKU '%s'", sku), tenantId, Product.STORE_ID);
 		}
 	}
 
-	private String getPartitionKey(String tenantId) {
-		return String.format("%s%s%s%s%s", tenantId, Product.KEY_DELIMITER, STORE_ID, Product.KEY_DELIMITER,
-				EntityType.PRODUCTS.getLabel());
+	public List<Product> batchLoad(String tenantId, List<String> productIds) {
+		DynamoDBMapper mapper = dynamoDBMapper(tenantId);
+
+		List<KeyPair> keyPairs = new ArrayList<>();
+		for (String id : productIds) {
+			KeyPair pair = new KeyPair();
+			pair.setHashKey(Product.buildPartitionKey(tenantId));
+			pair.setRangeKey(id);
+			keyPairs.add(pair);
+		}
+		Map<Class<?>, List<KeyPair>> tableKeyPair = new HashMap<>();
+		tableKeyPair.put(Product.class, keyPairs);
+
+		Map<String, List<Object>> batchResults = mapper.batchLoad(tableKeyPair);
+		if (batchResults.isEmpty()) {
+			logger.info("No products matching the IDs: {}", productIds);
+			return new ArrayList<>();
+		}
+		return (List<Product>) (List<?>) batchResults.get(buildTableName(tenantId));
 	}
 
-	private List<Product> convertSearchResultsToProducts(SearchResponse<JsonNode> results) {
-		ObjectMapper objectMapper = new ObjectMapper()
-				.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
+	public List<Product> searchByIdentifier(String tenantId, String identifier) {
+		List<Product> products;
+		List<Query> mustQueries = new ArrayList<>();
+		MatchQuery pKeyQuery = QueryBuilders.match()
+				.field(Product.OpenSearch.FieldNames.PARTITION_KEY)
+				.query(FieldValue.of(Product.buildPartitionKey(tenantId)))
+				.build();
+		mustQueries.add(pKeyQuery._toQuery());
 
-		List<DynamoDbStreamRecord> records = new ArrayList<>();
-		for(int i = 0; i < results.hits().hits().size(); i++) {
-			DynamoDbStreamRecord r = objectMapper.convertValue(results.hits().hits().get(i).source(), DynamoDbStreamRecord.class);
-			records.add(r);
+		MatchQuery skuQuery = QueryBuilders.match()
+				.field(Product.OpenSearch.FieldNames.SKU)
+				.query(FieldValue.of(identifier))
+				.build();
+		mustQueries.add(skuQuery._toQuery());
+
+		BoolQuery boolQuery = new BoolQuery.Builder().must(mustQueries).build();
+
+		SearchRequest req = SearchRequest.of(s -> s
+				.index(Product.OpenSearch.getIndex(tenantId))
+				.query(boolQuery._toQuery())
+		);
+
+		try {
+			SearchResponse<JsonNode> results = openSearchClient.search(req, JsonNode.class);
+			products = convertSearchResultsToModels(results, Product.class, tenantId);
+		} catch (IOException e) {
+			logger.error("Error reading from OpenSearch: ", e);
+			throw new SearchException("Error reading from OpenSearch");
 		}
 
-		List<Map<String, AttributeValue>> dynamoDbProductAttributes = records
-				.stream()
-				.map(DynamoDbStreamRecord::getNewImage)
-				.collect(Collectors.toList());
-		return mapper.marshallIntoObjects(Product.class, dynamoDbProductAttributes);
+		return products;
 	}
 
 	private String getOpenSearchSortField(String sortBy) {
 		if (sortBy.toLowerCase().contains(SORT_BY_CATEGORY_NAME)) {
-			return OPEN_SEARCH_SORT_CATEGORY_NAME;
+			return Product.OpenSearch.FieldNames.CATEGORY_NAME_KEYWORD;
 		}
 		if (sortBy.toLowerCase().contains(SORT_BY_VENDOR_NAME)) {
-			return OPEN_SEARCH_SORT_VENDOR_NAME;
+			return Product.OpenSearch.FieldNames.VENDOR_NAME_KEYWORD;
 		}
 		if (sortBy.toLowerCase().contains(SORT_BY_NAME)) {
-			return OPEN_SEARCH_SORT_NAME;
+			return Product.OpenSearch.FieldNames.NAME_KEYWORD;
 		}
 		if (sortBy.toLowerCase().contains(SORT_BY_SKU)) {
-			return OPEN_SEARCH_SORT_SKU;
+			return Product.OpenSearch.FieldNames.SKU_KEYWORD;
 		}
 		if (sortBy.toLowerCase().contains(SORT_BY_RETAIL_PRICE)) {
-			return OPEN_SEARCH_SORT_RETAIL_PRICE;
+			return Product.OpenSearch.FieldNames.RETAIL_PRICE_KEYWORD;
 		}
 		if (sortBy.toLowerCase().contains(SORT_BY_QUANTITY_ON_HAND)) {
-			return OPEN_SEARCH_SORT_QOH;
+			return Product.OpenSearch.FieldNames.QOH_KEYWORD;
 		}
 
 		return "";

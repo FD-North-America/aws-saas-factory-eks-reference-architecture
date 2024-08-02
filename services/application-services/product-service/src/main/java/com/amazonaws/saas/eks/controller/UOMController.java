@@ -2,12 +2,12 @@ package com.amazonaws.saas.eks.controller;
 
 import com.amazonaws.saas.eks.auth.JwtAuthManager;
 import com.amazonaws.saas.eks.auth.dto.TenantUser;
-import com.amazonaws.saas.eks.dto.requests.uom.CreateUOMRequest;
-import com.amazonaws.saas.eks.dto.requests.uom.ListUOMRequestParams;
-import com.amazonaws.saas.eks.dto.requests.uom.UpdateUOMRequest;
-import com.amazonaws.saas.eks.dto.responses.uom.ListUOMResponse;
-import com.amazonaws.saas.eks.dto.responses.uom.UOMResponse;
-import com.amazonaws.saas.eks.model.Permission;
+import com.amazonaws.saas.eks.product.dto.requests.uom.CreateUOMRequest;
+import com.amazonaws.saas.eks.product.dto.requests.uom.ListUOMRequestParams;
+import com.amazonaws.saas.eks.product.dto.requests.uom.UpdateUOMRequest;
+import com.amazonaws.saas.eks.product.dto.responses.uom.ListUOMResponse;
+import com.amazonaws.saas.eks.product.dto.responses.uom.UOMResponse;
+import com.amazonaws.saas.eks.product.model.Permission;
 import com.amazonaws.saas.eks.service.UOMService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -60,7 +60,7 @@ public class UOMController {
             TenantUser tu = jwtAuthManager.getTenantUser();
             return uomService.get(tu.getTenantId(), uomId);
         } catch (Exception e) {
-            logger.error("UOM not found with ID: " + uomId, e);
+            logger.error(String.format("UOM not found with ID: %s", uomId), e);
             throw e;
         }
     }
