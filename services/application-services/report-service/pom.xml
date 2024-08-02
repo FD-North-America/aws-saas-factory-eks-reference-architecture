@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.amazonaws.saas.eks</groupId>
 	<artifactId>report-service</artifactId>
-	<version>1.0</version>
+	<version>1.17</version>
 	<packaging>war</packaging>
 
 	<parent>
@@ -40,6 +40,13 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
+			<dependency>
+				<groupId>software.amazon.awssdk</groupId>
+				<artifactId>bom</artifactId>
+				<version>2.17.219</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 
@@ -49,12 +56,32 @@
 		<dependency>
 			<groupId>com.amazonaws.saas.eks</groupId>
 			<artifactId>error-handling</artifactId>
-			<version>1.0.16</version>
+			<version>1.0.25</version>
 		</dependency>
 		<dependency>
 			<groupId>com.amazonaws.saas.eks</groupId>
 			<artifactId>auth</artifactId>
 			<version>1.0.3</version>
+		</dependency>
+		<dependency>
+			<groupId>com.amazonaws.saas.eks</groupId>
+			<artifactId>order-domain</artifactId>
+			<version>1.1.12-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>com.amazonaws.saas.eks</groupId>
+			<artifactId>cashdrawer-domain</artifactId>
+			<version>1.0.21</version>
+		</dependency>
+		<dependency>
+			<groupId>com.amazonaws.saas.eks</groupId>
+			<artifactId>settings-domain</artifactId>
+			<version>1.0.2</version>
+		</dependency>
+		<dependency>
+			<groupId>com.amazonaws.saas.eks</groupId>
+			<artifactId>product-domain</artifactId>
+			<version>1.1.5</version>
 		</dependency>
 		<!-- -->
 
@@ -136,6 +163,59 @@
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-loadbalancer</artifactId>
 			<version>3.1.0</version> <!-- or any other suitable version -->
+		</dependency>
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>31.0.1-jre</version>
+		</dependency>
+
+		<!-- OpenSearch -->
+		<dependency>
+			<groupId>org.opensearch.client</groupId>
+			<artifactId>opensearch-java</artifactId>
+			<version>2.2.0</version>
+		</dependency>
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>auth</artifactId>
+			<version>2.17.219</version>
+		</dependency>
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>apache-client</artifactId>
+			<version>2.17.224</version>
+		</dependency>
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>regions</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpcore</artifactId>
+			<version>4.4.11</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.5.13</version>
+		</dependency>
+		<dependency>
+			<groupId>jakarta.json</groupId>
+			<artifactId>jakarta.json-api</artifactId>
+			<version>2.1.1</version>
+		</dependency>
+
+		<!-- PDF -->
+		<dependency>
+			<groupId>com.itextpdf</groupId>
+			<artifactId>itextpdf</artifactId>
+			<version>5.5.13.3</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.pdfbox</groupId>
+			<artifactId>pdfbox</artifactId>
+			<version>3.0.0-RC1</version>
 		</dependency>
 	</dependencies>
 
