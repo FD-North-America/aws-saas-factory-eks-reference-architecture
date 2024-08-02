@@ -160,6 +160,7 @@ public class CashDrawerRepository extends BaseRepository {
             if (cashDrawer.getCardTotalAmount() != null) {
                 model.setCardTotalAmount(cashDrawer.getCardTotalAmount());
             }
+            model.setWorkstationIds(cashDrawer.getWorkstationIds());
             model.setModified(new Date());
 
             mapper.save(model);

@@ -8,23 +8,17 @@ import com.amazonaws.saas.eks.cashdrawer.dto.responses.ListCashDrawersResponse;
 import com.amazonaws.saas.eks.cashdrawer.dto.responses.checkout.CheckoutDetailsResponse;
 import com.amazonaws.saas.eks.cashdrawer.mapper.CashDrawerMapper;
 import com.amazonaws.saas.eks.cashdrawer.model.CashDrawer;
-import com.amazonaws.saas.eks.cashdrawer.model.CashDrawerCheckout;
 import com.amazonaws.saas.eks.cashdrawer.model.CashDrawerSearchResponse;
 import com.amazonaws.saas.eks.cashdrawer.model.enums.CashDrawerStatus;
-import com.amazonaws.saas.eks.exception.CashDrawerException;
 import com.amazonaws.saas.eks.order.model.Order;
-import com.amazonaws.saas.eks.repository.CashDrawerCheckoutRepository;
 import com.amazonaws.saas.eks.repository.CashDrawerRepository;
 import com.amazonaws.saas.eks.repository.OrderRepository;
 import com.amazonaws.saas.eks.service.CashDrawerService;
+import com.amazonaws.saas.eks.service.CheckoutService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -38,14 +32,19 @@ public class CashDrawerServiceImpl implements CashDrawerService {
     private static final int DEFAULT_SEARCH_START = 0;
     private static final int DEFAULT_SEARCH_SIZE = 10;
 
-    @Autowired
-    private CashDrawerRepository cashDrawerRepository;
+    private final CashDrawerRepository cashDrawerRepository;
 
-    @Autowired
-    private CashDrawerCheckoutRepository cashDrawerCheckoutRepository;
+    private final OrderRepository orderRepository;
 
-    @Autowired
-    private OrderRepository orderRepository;
+    private final CheckoutService checkoutService;
+
+    public CashDrawerServiceImpl(CashDrawerRepository cashDrawerRepository,
+                                 OrderRepository orderRepository,
+                                 CheckoutService checkoutService) {
+        this.cashDrawerRepository = cashDrawerRepository;
+        this.orderRepository = orderRepository;
+        this.checkoutService = checkoutService;
+    }
 
     @Override
     public CashDrawerResponse create(CreateCashDrawerRequest request, String tenantId) {
@@ -67,76 +66,8 @@ public class CashDrawerServiceImpl implements CashDrawerService {
         CashDrawer newCashDrawer = CashDrawerMapper.INSTANCE.updateCashDrawerRequestToCashDrawer(request);
         newCashDrawer.setId(cashDrawerId);
 
-        String status = request.getStatus();
-        if (status != null && status.equals(CashDrawerStatus.ACTIVE.toString())
-                && oldCashDrawer.getStatus().equals(CashDrawerStatus.CHECKED.toString())) {
-            newCashDrawer.setClearedDate(new Date());
-            newCashDrawer.setClearedBy(newCashDrawer.getAssignedUser());
-
-            CashDrawerCheckout checkout = cashDrawerCheckoutRepository.getByCashDrawerId(cashDrawerId, tenantId);
-            if (checkout == null) {
-                String message = String.format("TenantId: %s-Cannot clear a cash drawer that isn't checked out", tenantId);
-                logger.error(message);
-                throw new CashDrawerException(message);
-            }
-
-            checkout.setStatus(CashDrawerStatus.CLEARED.toString());
-            checkout.setClearedDate(newCashDrawer.getClearedDate());
-            checkout.setClearedBy(newCashDrawer.getAssignedUser());
-            checkout.setTrays(newCashDrawer.getTrays());
-            checkout.setTraysTotalAmount(newCashDrawer.getTraysTotalAmount());
-            checkout.setCashTotalAmount(newCashDrawer.getCashTotalAmount());
-            checkout.setCardTotalAmount(newCashDrawer.getCardTotalAmount());
-            cashDrawerCheckoutRepository.update(checkout, tenantId);
-
-            newCashDrawer.setTrays(new ArrayList<>());
-            newCashDrawer.setTraysTotalAmount(BigDecimal.ZERO);
-            newCashDrawer.setCardTotalAmount(BigDecimal.ZERO);
-            newCashDrawer.setCashTotalAmount(BigDecimal.ZERO);
-        }
-
-        if (status != null && status.equals(CashDrawerStatus.CHECKED.toString())) {
-            if (!StringUtils.hasLength(newCashDrawer.getCheckoutRep())) {
-                String message = String.format("TenantId: %s-CheckoutRep user must be defined ", tenantId);
-                logger.error(message);
-                throw new CashDrawerException(message);
-            }
-            List<Order> orders = orderRepository.getOrdersByCashDrawer(tenantId, cashDrawerId, oldCashDrawer.getStartupDate(), new Date());
-            BigDecimal checkoutAmount = orders.stream().map(Order::getTotal).reduce(BigDecimal.ZERO, BigDecimal::add);
-            newCashDrawer.setCheckoutAmounts(checkoutAmount);
-
-            CashDrawerCheckout checkout = new CashDrawerCheckout();
-            checkout.setCashDrawerId(cashDrawerId);
-            checkout.setCashDrawerNumber(oldCashDrawer.getNumber());
-            checkout.setCheckoutRep(newCashDrawer.getCheckoutRep());
-            checkout.setCheckoutAmounts(newCashDrawer.getCheckoutAmounts());
-            checkout.setStartupDate(oldCashDrawer.getStartupDate());
-            checkout.setStartUpAmount(oldCashDrawer.getStartUpAmount());
-
-            cashDrawerCheckoutRepository.create(checkout, tenantId);
-
-            newCashDrawer.setCheckoutDate(checkout.getCreated());
-        }
-
-        if (status != null && status.equals(CashDrawerStatus.CLEARED.toString())) {
-            if (!StringUtils.hasLength(newCashDrawer.getClearedBy())) {
-                String message = String.format("TenantId: %s-ClearedBy user must be defined ", tenantId);
-                logger.error(message);
-                throw new CashDrawerException(message);
-            }
-            newCashDrawer.setClearedDate(new Date());
-
-            CashDrawerCheckout checkout = cashDrawerCheckoutRepository.getByCashDrawerId(cashDrawerId, tenantId);
-            if (checkout == null) {
-                String message = String.format("TenantId: %s-Cannot clear a cash drawer that isn't checked out", tenantId);
-                logger.error(message);
-                throw new CashDrawerException(message);
-            }
-            checkout.setStatus(CashDrawerStatus.CLEARED.toString());
-            checkout.setClearedDate(newCashDrawer.getClearedDate());
-            checkout.setClearedBy(newCashDrawer.getClearedBy());
-            cashDrawerCheckoutRepository.update(checkout, tenantId);
-        }
+        // Update fields based on updated request status
+        newCashDrawer = checkoutService.process(tenantId, request.getStatus(), oldCashDrawer, newCashDrawer);
 
         CashDrawer updatedCashDrawer = cashDrawerRepository.update(newCashDrawer, tenantId);
 
