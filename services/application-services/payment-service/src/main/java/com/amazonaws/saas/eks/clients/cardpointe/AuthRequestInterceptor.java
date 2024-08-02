@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 
 public class AuthRequestInterceptor implements RequestInterceptor {
-    @Autowired
+    @Autowired(required = false)
     private SessionHolder sessionHolder;
 
     private final String authorization;
@@ -22,7 +22,7 @@ public class AuthRequestInterceptor implements RequestInterceptor {
     @Override
     public void apply(RequestTemplate requestTemplate) {
         requestTemplate.header(HttpHeaders.AUTHORIZATION, authorization);
-        if (sessionHolder.getSessionKey() != null) {
+        if (!requestTemplate.url().equals("/v3/authCard") && sessionHolder.getSessionKey() != null) {
             requestTemplate.header("X-CardConnect-SessionKey", sessionHolder.getSessionKey());
         }
         requestTemplate.target(serviceUrl);

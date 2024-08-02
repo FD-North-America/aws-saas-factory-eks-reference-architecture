@@ -4,19 +4,27 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 
+@Getter
+@Setter
 public class SecretsHolder {
-    @Getter
-    @Setter
     @JsonProperty(value = "CardPointeServiceUrlDev")
     private String cardPointeServiceUrl;
 
-    @Getter
-    @Setter
     @JsonProperty(value = "CardPointeServiceAuthDev")
     private String cardPointeServiceAuth;
 
-    @Getter
-    @Setter
     @JsonProperty(value = "EncryptionKeyDev")
     private String encryptionKey;
+
+    @JsonProperty(value = "CardConnectServiceUrlDev")
+    private String cardConnectServiceUrl;
+
+    @JsonProperty(value = "CardConnectUsernameDev")
+    private String cardConnectUsername;
+
+    @JsonProperty(value = "CardConnectPasswordDev")
+    private String cardConnectPassword;
+
+    @JsonProperty(value = "CardSecureServiceUrlDev")
+    private String cardSecureServiceUrl;
 }

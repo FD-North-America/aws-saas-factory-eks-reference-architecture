@@ -2,9 +2,11 @@ package com.amazonaws.saas.eks.controller;
 
 import com.amazonaws.saas.eks.auth.JwtAuthManager;
 import com.amazonaws.saas.eks.auth.dto.TenantUser;
-import com.amazonaws.saas.eks.dto.requests.*;
-import com.amazonaws.saas.eks.model.Permission;
+import com.amazonaws.saas.eks.payment.dto.requests.*;
+import com.amazonaws.saas.eks.payment.dto.responses.ListOrderPaymentsResponse;
+import com.amazonaws.saas.eks.payment.model.Permission;
 import com.amazonaws.saas.eks.service.PaymentService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,12 +28,12 @@ public class PaymentController {
 	@Autowired
 	private JwtAuthManager jwtAuthManager;
 
-	@PreAuthorize("hasAnyAuthority('" + Permission.POS_CREATE + "')")
+	@PreAuthorize("hasAnyAuthority('" + Permission.POS_CREATE + "','" + Permission.POS_SERVER_UPDATE + "')")
 	@PostMapping(value = "{tenantId}/payments/connect", produces = { MediaType.APPLICATION_JSON_VALUE })
-	public ResponseEntity<Object> connect(@Valid @RequestBody ConnectRequest request) {
+	public ResponseEntity<Object> connect(@PathVariable String tenantId,
+										  @Valid @RequestBody ConnectRequest request) {
 		try {
-			TenantUser tu = jwtAuthManager.getTenantUser();
-			return paymentService.connect(tu.getTenantId(), request);
+			return paymentService.connect(tenantId, request);
 		} catch (Exception e) {
 			logger.error("Error connecting", e);
 			throw e;
@@ -170,12 +172,12 @@ public class PaymentController {
 		}
 	}
 
-	@PreAuthorize("hasAnyAuthority('" + Permission.POS_UPDATE + "')")
+	@PreAuthorize("hasAnyAuthority('" + Permission.POS_UPDATE + "','" + Permission.POS_SERVER_UPDATE + "')")
 	@PostMapping(value = "{tenantId}/payments/authCard", produces = { MediaType.APPLICATION_JSON_VALUE })
-	public ResponseEntity<Object> authCard(@Valid @RequestBody AuthCardRequest request) {
+	public ResponseEntity<Object> authCard(@PathVariable String tenantId,
+										   @Valid @RequestBody AuthCardRequest request) {
 		try {
-			TenantUser tu = jwtAuthManager.getTenantUser();
-			return paymentService.authCard(tu.getTenantId(), request);
+			return paymentService.authCard(tenantId, request);
 		} catch (Exception e) {
 			logger.error("Error to auth card", e);
 			throw e;
@@ -202,6 +204,17 @@ public class PaymentController {
 			return paymentService.tip(tu.getTenantId(), request);
 		} catch (Exception e) {
 			logger.error("Error to tip", e);
+			throw e;
+		}
+	}
+
+	@PreAuthorize("hasAnyAuthority('" + Permission.POS_SERVER_READ + "')")
+	@GetMapping(value = "{tenantId}/payments/{orderNumber}", produces = { MediaType.APPLICATION_JSON_VALUE})
+	public ListOrderPaymentsResponse getOrderPayments(@PathVariable String tenantId, @PathVariable String orderNumber) throws JsonProcessingException {
+		try {
+			return paymentService.getOrderPayments(tenantId, orderNumber);
+		} catch (Exception e) {
+			logger.error("Error reading payments for Order: " + orderNumber, e);
 			throw e;
 		}
 	}
