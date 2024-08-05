@@ -1,6 +1,6 @@
 package com.amazonaws.saas.eks.clients.cardpointe;
 
-import com.amazonaws.saas.eks.clients.cardpointe.dto.requests.*;
+import com.amazonaws.saas.eks.payment.clients.cardpointe.dto.requests.*;
 import feign.Response;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
@@ -59,7 +59,7 @@ public interface CardPointeServiceClient {
 
     @PostMapping(value = "/v3/authCard", produces = {MediaType.APPLICATION_JSON_VALUE})
     @ResponseBody
-    ResponseEntity<Object> authCard(@RequestBody AuthCardRequest request);
+    ResponseEntity<Object> authCard(@RequestHeader("X-CardConnect-SessionKey") String sessionKey, @RequestBody AuthCardRequest request);
 
     @PostMapping(value = "/v3/authManual", produces = {MediaType.APPLICATION_JSON_VALUE})
     @ResponseBody

@@ -77,4 +77,36 @@ public class SecretsClient {
         }
         return "";
     }
+
+    public String getConnectUsername() {
+        SecretsHolder secretsHolder = getSecrets();
+        if (secretsHolder != null) {
+            return secretsHolder.getCardConnectUsername();
+        }
+        return "";
+    }
+
+    public String getConnectPassword() {
+        SecretsHolder secretsHolder = getSecrets();
+        if (secretsHolder != null) {
+            return secretsHolder.getCardConnectPassword();
+        }
+        return "";
+    }
+
+    public String getConnectServiceUrl() {
+        SecretsHolder secretsHolder = getSecrets();
+        if (secretsHolder != null) {
+            return secretsHolder.getCardConnectServiceUrl();
+        }
+        return "";
+    }
+
+    public String getCardSecureServiceUrl() {
+        SecretsHolder secretsHolder = getSecrets();
+        if (secretsHolder != null) {
+            return secretsHolder.getCardSecureServiceUrl();
+        }
+        return "";
+    }
 }

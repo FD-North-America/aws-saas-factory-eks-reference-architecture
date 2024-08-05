@@ -1,15 +1,15 @@
 package com.amazonaws.saas.eks.service.impl;
 
-import com.amazonaws.saas.eks.dto.requests.category.CreateCategoryRequest;
-import com.amazonaws.saas.eks.dto.requests.category.ListCategoriesRequestParams;
-import com.amazonaws.saas.eks.dto.requests.category.UpdateCategoryRequest;
-import com.amazonaws.saas.eks.dto.responses.category.CategoryResponse;
-import com.amazonaws.saas.eks.dto.responses.category.ListCategoriesResponse;
 import com.amazonaws.saas.eks.error.DependencyViolationErrorItem;
 import com.amazonaws.saas.eks.exception.ProductCategoryInvalidDeleteException;
-import com.amazonaws.saas.eks.mapper.CategoryMapper;
-import com.amazonaws.saas.eks.model.Category;
-import com.amazonaws.saas.eks.model.Product;
+import com.amazonaws.saas.eks.product.dto.requests.category.CreateCategoryRequest;
+import com.amazonaws.saas.eks.product.dto.requests.category.ListCategoriesRequestParams;
+import com.amazonaws.saas.eks.product.dto.requests.category.UpdateCategoryRequest;
+import com.amazonaws.saas.eks.product.dto.responses.category.CategoryResponse;
+import com.amazonaws.saas.eks.product.dto.responses.category.ListCategoriesResponse;
+import com.amazonaws.saas.eks.product.mapper.CategoryMapper;
+import com.amazonaws.saas.eks.product.model.Category;
+import com.amazonaws.saas.eks.product.model.Product;
 import com.amazonaws.saas.eks.repository.CategoryRepository;
 import com.amazonaws.saas.eks.repository.ProductRepository;
 import com.amazonaws.saas.eks.service.CategoryService;
@@ -48,7 +48,7 @@ public class CategoryServiceImpl implements CategoryService {
         ListCategoriesResponse response = new ListCategoriesResponse();
         List<Category> categories = categoryRepository.getAll(tenantId, params.getFilter(), params.getLevel());
         for (Category c: categories) {
-            CategoryResponse cr = StringUtils.isEmpty(params.getLevel())
+            CategoryResponse cr = !StringUtils.hasLength(params.getLevel())
                     ? CategoryMapper.INSTANCE.categoryToCategoryResponse(c)
                     : CategoryMapper.INSTANCE.categoryToSimplerCategoryResponse(c);
            response.getCategories().add(cr);
@@ -73,11 +73,11 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public void delete(String tenantId, String categoryId) {
         Category model = categoryRepository.get(tenantId, categoryId);
-        if (model.getCategories().size() > 0) {
+        if (!model.getCategories().isEmpty()) {
             List<DependencyViolationErrorItem> items = model.getCategories().stream()
                     .map(m -> new DependencyViolationErrorItem(m.getId(), m.getName()))
                     .collect(Collectors.toList());
-            throw new ProductCategoryInvalidDeleteException(categoryId, model.getLevel(), CategoryRepository.STORE_ID,
+            throw new ProductCategoryInvalidDeleteException(categoryId, model.getLevel(), Product.STORE_ID,
                     Category.class.getSimpleName(), items);
         }
 
@@ -86,11 +86,11 @@ public class CategoryServiceImpl implements CategoryService {
             List<DependencyViolationErrorItem> items = products.stream()
                     .map(p -> new DependencyViolationErrorItem(p.getId(), p.getName()))
                     .collect(Collectors.toList());
-            throw new ProductCategoryInvalidDeleteException(categoryId, model.getLevel(), CategoryRepository.STORE_ID,
+            throw new ProductCategoryInvalidDeleteException(categoryId, model.getLevel(), Product.STORE_ID,
                     Product.class.getSimpleName(), items);
         }
 
-        categoryRepository.delete(model);
+        categoryRepository.delete(tenantId, model.getId());
     }
 
     private void updateCategoryProducts(String tenantId, Category category) {
@@ -99,6 +99,6 @@ public class CategoryServiceImpl implements CategoryService {
             p.setCategoryName(category.getName());
             p.setCategoryPath(category.getCategoryPath());
         }
-        productRepository.batchUpdate(categoryProducts);
+        productRepository.batchUpdate(tenantId, categoryProducts);
     }
 }

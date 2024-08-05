@@ -2,12 +2,12 @@ package com.amazonaws.saas.eks.controller;
 
 import com.amazonaws.saas.eks.auth.JwtAuthManager;
 import com.amazonaws.saas.eks.auth.dto.TenantUser;
-import com.amazonaws.saas.eks.dto.requests.vendor.CreateVendorRequest;
-import com.amazonaws.saas.eks.dto.requests.vendor.ListVendorsRequestParams;
-import com.amazonaws.saas.eks.dto.requests.vendor.UpdateVendorRequest;
-import com.amazonaws.saas.eks.dto.responses.vendor.ListVendorResponse;
-import com.amazonaws.saas.eks.dto.responses.vendor.VendorResponse;
-import com.amazonaws.saas.eks.model.Permission;
+import com.amazonaws.saas.eks.product.dto.requests.vendor.CreateVendorRequest;
+import com.amazonaws.saas.eks.product.dto.requests.vendor.ListVendorsRequestParams;
+import com.amazonaws.saas.eks.product.dto.requests.vendor.UpdateVendorRequest;
+import com.amazonaws.saas.eks.product.dto.responses.vendor.ListVendorResponse;
+import com.amazonaws.saas.eks.product.dto.responses.vendor.VendorResponse;
+import com.amazonaws.saas.eks.product.model.Permission;
 import com.amazonaws.saas.eks.service.VendorService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -30,7 +30,7 @@ public class VendorController {
     private VendorService vendorService;
 
     @PreAuthorize("hasAnyAuthority('" + Permission.VENDOR_CREATE + "')")
-    @PostMapping(value = "{tenantId}/products/vendors", produces = {MediaType.APPLICATION_JSON_VALUE})
+    @PostMapping(value = "{tenantId}/vendors", produces = {MediaType.APPLICATION_JSON_VALUE})
     public VendorResponse create(@RequestBody @Valid CreateVendorRequest request) {
         try {
             TenantUser tu = jwtAuthManager.getTenantUser();
@@ -42,19 +42,19 @@ public class VendorController {
     }
 
     @PreAuthorize("hasAnyAuthority('" + Permission.VENDOR_READ + "')")
-    @GetMapping(value = "{tenantId}/products/vendors/{vendorId}", produces = {MediaType.APPLICATION_JSON_VALUE})
+    @GetMapping(value = "{tenantId}/vendors/{vendorId}", produces = {MediaType.APPLICATION_JSON_VALUE})
     public VendorResponse get(@PathVariable("vendorId") String vendorId) {
         try {
             TenantUser tu = jwtAuthManager.getTenantUser();
             return vendorService.get(tu.getTenantId(), vendorId);
         } catch (Exception e) {
-            logger.error("Vendor not found with ID: " + vendorId, e);
+            logger.error(String.format("Vendor not found with ID: %s", vendorId), e);
             throw e;
         }
     }
 
     @PreAuthorize("hasAnyAuthority('" + Permission.VENDOR_UPDATE + "')")
-    @PutMapping(value = "{tenantId}/products/vendors/{vendorId}", produces = {MediaType.APPLICATION_JSON_VALUE})
+    @PutMapping(value = "{tenantId}/vendors/{vendorId}", produces = {MediaType.APPLICATION_JSON_VALUE})
     public VendorResponse update(@PathVariable("vendorId") String vendorId,
                                  @RequestBody @Valid UpdateVendorRequest request) {
         try {
@@ -67,7 +67,7 @@ public class VendorController {
     }
 
     @PreAuthorize("hasAnyAuthority('" + Permission.VENDOR_DELETE + "')")
-    @DeleteMapping(value = "{tenantId}/products/vendors/{vendorId}", produces = {MediaType.APPLICATION_JSON_VALUE})
+    @DeleteMapping(value = "{tenantId}/vendors/{vendorId}", produces = {MediaType.APPLICATION_JSON_VALUE})
     public void delete(@PathVariable("vendorId") String vendorId) {
         try {
             TenantUser tu = jwtAuthManager.getTenantUser();
@@ -79,7 +79,7 @@ public class VendorController {
     }
 
     @PreAuthorize("hasAnyAuthority('" + Permission.VENDOR_READ + "')")
-    @GetMapping(value = "{tenantId}/products/vendors", produces = {MediaType.APPLICATION_JSON_VALUE})
+    @GetMapping(value = "{tenantId}/vendors", produces = {MediaType.APPLICATION_JSON_VALUE})
     public ListVendorResponse getAll(@Valid ListVendorsRequestParams params) {
         try {
             TenantUser tu = jwtAuthManager.getTenantUser();

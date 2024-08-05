@@ -5,13 +5,13 @@
 
 	<groupId>com.amazonaws.saas.eks</groupId>
 	<artifactId>product-service</artifactId>
-	<version>1.0.6</version>
+	<version>1.1.2</version>
 	<packaging>war</packaging>
 
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.0.5.RELEASE</version>
+		<version>2.7.10</version>
 	</parent>
 
 	<properties>
@@ -19,6 +19,7 @@
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<maven.compiler.source>1.8</maven.compiler.source>
     	<log4j2.version>2.17.1</log4j2.version>
+		<dep.validation>2.0.1.Final</dep.validation>
 	</properties>
 
 	<dependencyManagement>
@@ -46,12 +47,22 @@
 		<dependency>
 			<groupId>com.amazonaws.saas.eks</groupId>
 			<artifactId>error-handling</artifactId>
-			<version>1.0.13</version>
+			<version>1.0.29-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.amazonaws.saas.eks</groupId>
 			<artifactId>auth</artifactId>
-			<version>1.0.2-SNAPSHOT</version>
+			<version>1.0.9</version>
+		</dependency>
+		<dependency>
+			<groupId>com.amazonaws.saas.eks</groupId>
+			<artifactId>settings-domain</artifactId>
+			<version>1.0.1</version>
+		</dependency>
+		<dependency>
+			<groupId>com.amazonaws.saas.eks</groupId>
+			<artifactId>product-domain</artifactId>
+			<version>1.1.5</version>
 		</dependency>
 		<!-- -->
 
@@ -141,6 +152,24 @@
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpclient</artifactId>
 			<version>4.5.13</version>
+		</dependency>
+		<dependency>
+			<groupId>javax.validation</groupId>
+			<artifactId>validation-api</artifactId>
+			<version>${dep.validation}</version>
+		</dependency>
+		<dependency>
+			<groupId>jakarta.json</groupId>
+			<artifactId>jakarta.json-api</artifactId>
+			<version>2.1.1</version>
+		</dependency>
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>secretsmanager</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>aws-java-sdk-secretsmanager</artifactId>
 		</dependency>
 	</dependencies>
 

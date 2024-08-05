@@ -98,7 +98,7 @@ public class UserService {
      * @param createUserRequest the user information and attributes
      * @return UserResponse
      */
-    public UserResponse createUser(String userPoolId, CreateUserRequest createUserRequest) {
+    public UserResponse createUser(String tenantId, String userPoolId, CreateUserRequest createUserRequest) {
         AWSCognitoIdentityProvider cognitoIdentityProvider = AWSCognitoIdentityProviderClientBuilder.defaultClient();
 
         UserResponse user = UserMapper.INSTANCE.createUserRequestToUserResponse(createUserRequest);
@@ -106,7 +106,7 @@ public class UserService {
         AdminCreateUserRequest adminCreateUserRequest = new AdminCreateUserRequest()
                 .withUserPoolId(userPoolId)
                 .withUsername(user.getUsername())
-                .withUserAttributes(user.getCognitoUserAttributes());
+                .withUserAttributes(user.getCognitoUserAttributes(tenantId));
 
         if (!StringUtils.isEmpty(createUserRequest.getTemporaryPassword())) {
             adminCreateUserRequest = adminCreateUserRequest
@@ -163,7 +163,7 @@ public class UserService {
         AdminUpdateUserAttributesRequest adminUpdateUserRequest = new AdminUpdateUserAttributesRequest()
                 .withUserPoolId(userPoolId)
                 .withUsername(username)
-                .withUserAttributes(user.getCognitoUserAttributes());
+                .withUserAttributes(user.getCognitoUserAttributes(""));
 
         cognitoIdentityProvider.adminUpdateUserAttributes(adminUpdateUserRequest);
 

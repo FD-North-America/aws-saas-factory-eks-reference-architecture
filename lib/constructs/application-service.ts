@@ -9,14 +9,16 @@ import * as cr from 'aws-cdk-lib/custom-resources';
 
 export interface ApplicationServiceProps {
     readonly name: string
-    readonly assetDirectory: string
+    readonly assetDirectory?: string
     readonly ecrImageName: string
     readonly eksClusterName: string
     readonly codebuildKubectlRole: iam.IRole
     readonly internalApiDomain: string
-    readonly serviceUrlPrefix: string;
+    readonly serviceUrlPrefix: string
     
     readonly defaultBranchName?: string
+
+    readonly newRepository?: boolean
 }
 
 export class ApplicationService extends Construct {
@@ -27,12 +29,15 @@ export class ApplicationService extends Construct {
         super(scope, id);
 
         const defaultBranchName = props.defaultBranchName ?? "main";
+        
+        const sourceRepo = (props.newRepository ?? true)
+            ?  new codecommit.Repository(this, `${id}Repository`, {
+                repositoryName: props.name,
+                description: `Repository with code for ${props.name}`,
+                code: codecommit.Code.fromDirectory(props.assetDirectory ?? "", defaultBranchName)
+            })
+            : codecommit.Repository.fromRepositoryName(this, `${id}Repository`, props.name);
 
-        const sourceRepo = new codecommit.Repository(this, `${id}Repository`, {
-            repositoryName: props.name,
-            description: `Repository with code for ${props.name}`,
-            code: codecommit.Code.fromDirectory(props.assetDirectory, defaultBranchName)
-        });
         this.codeRepositoryUrl = sourceRepo.repositoryCloneUrlHttp;
 
         const containerRepo = new ecr.Repository(this, `${id}ECR`, {
@@ -82,7 +87,7 @@ export class ApplicationService extends Construct {
                 }
             },
             buildSpec: codebuild.BuildSpec.fromObject({
-                version: '0.2',
+                version: 0.2,
                 phases: {
                     install: {
                         commands: [
@@ -97,11 +102,12 @@ export class ApplicationService extends Construct {
                         commands: [
                             'aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO_URI',
                             'aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws',
+                            `export CODEARTIFACT_AUTH_TOKEN="aws codeartifact get-authorization-token --domain stallionstech --domain-owner '${Stack.of(this).account}' --region us-east-1 --query authorizationToken --output text"`
                         ],
                     },
                     build: {
                         commands: [
-                            "docker build -t $SEVICE_IMAGE_NAME:$IMAGE_TAG .",
+                            "docker build -t $SEVICE_IMAGE_NAME:$IMAGE_TAG --build-arg token=$CODEARTIFACT_AUTH_TOKEN .",
                             "docker tag $SEVICE_IMAGE_NAME:$IMAGE_TAG $ECR_REPO_URI:latest",
                             "docker tag $SEVICE_IMAGE_NAME:$IMAGE_TAG $ECR_REPO_URI:$IMAGE_TAG",
                             "docker push $ECR_REPO_URI:latest",
@@ -114,6 +120,7 @@ export class ApplicationService extends Construct {
                             'echo "  newName: $ECR_REPO_URI" >> kubernetes/kustomization.yaml',
                             'echo "  newTag: $IMAGE_TAG" >> kubernetes/kustomization.yaml',
                             'echo "  value: $API_HOST" >> kubernetes/host-patch.yaml',
+                            'echo "  value: $AOSS_HOST" >> kubernetes/container-env-var-aoss-host-patch.yaml',
                             "for res in `kubectl get ns -l saas/tenant=true -o jsonpath='{.items[*].metadata.name}'`; do \
                             cp kubernetes/svc-acc-patch-template.yaml kubernetes/svc-acc-patch.yaml && \
                             cp kubernetes/path-patch-template.yaml kubernetes/path-patch.yaml && \

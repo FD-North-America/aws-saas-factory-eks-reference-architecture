@@ -125,8 +125,12 @@ public class UserResponse {
 	}
 
 	@JsonIgnore
-	public List<AttributeType> getCognitoUserAttributes() {
+	public List<AttributeType> getCognitoUserAttributes(String tenantId) {
 		ArrayList<AttributeType> attributes = new ArrayList<>();
+
+		if (!StringUtils.isEmpty(tenantId)) {
+			attributes.add(new AttributeType().withName(UserAttribute.TENANT_ID.label).withValue(tenantId));
+		}
 
 		if (!StringUtils.isEmpty(this.getFirstName())) {
 			attributes.add(new AttributeType().withName(UserAttribute.FIRST_NAME.label).withValue(this.getFirstName()));

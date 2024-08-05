@@ -11,6 +11,7 @@ public enum UserAttribute {
     FIRST_NAME("given_name"),
     LAST_NAME("family_name"),
     ADDRESS("address"),
+    TENANT_ID("custom:tenant-id"),
     CITY("custom:city"),
     STATE("custom:state"),
     COUNTRY("custom:country"),

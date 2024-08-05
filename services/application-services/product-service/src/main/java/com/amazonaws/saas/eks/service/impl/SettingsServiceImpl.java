@@ -2,7 +2,7 @@ package com.amazonaws.saas.eks.service.impl;
 
 import com.amazonaws.saas.eks.dto.responses.settings.SettingsResponse;
 import com.amazonaws.saas.eks.mapper.SettingsMapper;
-import com.amazonaws.saas.eks.model.Settings;
+import com.amazonaws.saas.eks.settings.model.Settings;
 import com.amazonaws.saas.eks.repository.SettingsRepository;
 import com.amazonaws.saas.eks.service.SettingsService;
 import org.apache.logging.log4j.LogManager;

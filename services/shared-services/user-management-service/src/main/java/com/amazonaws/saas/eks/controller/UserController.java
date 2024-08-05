@@ -90,8 +90,9 @@ public class UserController {
     public ResponseEntity<?> createUser(@RequestBody @Valid CreateUserRequest createUserRequest,
                                         HttpServletRequest request) {
         try {
-            String userPoolId = jwtAuthManager.getUserPoolId();
-            UserResponse newUser = this.service.createUser(userPoolId, createUserRequest);
+            TenantUser tenantUser = jwtAuthManager.getTenantUser();
+            UserResponse newUser = this.service.createUser(tenantUser.getTenantId(), tenantUser.getUserPoolId(),
+                    createUserRequest);
             URI userURI = URI.create("/users/" + newUser.getUsername());
             return ResponseEntity.created(userURI).body(newUser);
         } catch (Exception e) {
@@ -134,8 +135,8 @@ public class UserController {
                                         @RequestBody UpdateUserRequest updateUserRequest,
                                         HttpServletRequest request) {
         try {
-            String userPoolId = jwtAuthManager.getUserPoolId();
-            UserResponse user = this.service.updateUser(userPoolId, username, updateUserRequest);
+            TenantUser tenantUser = jwtAuthManager.getTenantUser();
+            UserResponse user = this.service.updateUser(tenantUser.getUserPoolId(), username, updateUserRequest);
             return ResponseEntity.ok(user);
         } catch (Exception e) {
             logger.error("UserManagement updateUser operation failed.", e);

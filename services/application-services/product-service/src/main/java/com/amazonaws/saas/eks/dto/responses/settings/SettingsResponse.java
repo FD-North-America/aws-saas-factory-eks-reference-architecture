@@ -7,17 +7,12 @@ import lombok.Setter;
 import java.util.Date;
 import java.util.List;
 
+@Getter
+@Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class SettingsResponse {
-    @Getter
-    @Setter
     private List<String> unitOfMeasureNames;
-
-    @Getter
-    @Setter
+    private String printerIp;
     private Date created;
-
-    @Getter
-    @Setter
     private Date modified;
 }

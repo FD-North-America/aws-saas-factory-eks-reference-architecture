@@ -1,6 +1,8 @@
 package com.amazonaws.saas.eks.service;
 
-import com.amazonaws.saas.eks.dto.requests.*;
+import com.amazonaws.saas.eks.payment.dto.requests.*;
+import com.amazonaws.saas.eks.payment.dto.responses.ListOrderPaymentsResponse;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.http.ResponseEntity;
 
 public interface PaymentService {
@@ -33,4 +35,6 @@ public interface PaymentService {
     ResponseEntity<Object> authManual(String tenantId, AuthManualRequest authManualRequest);
 
     ResponseEntity<Object> tip(String tenantId, TipRequest tipRequest);
+
+    ListOrderPaymentsResponse getOrderPayments(String tenantId, String orderNumber) throws JsonProcessingException;
 }

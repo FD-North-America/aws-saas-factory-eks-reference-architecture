@@ -4,13 +4,13 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.amazonaws.saas.eks</groupId>
 	<artifactId>order-service</artifactId>
-	<version>1.0.1</version>
+	<version>1.1.16-SNAPSHOT</version>
 	<packaging>war</packaging>
 
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.0.5.RELEASE</version>
+		<version>2.7.10</version>
 	</parent>
 
 	<properties>
@@ -18,6 +18,9 @@
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<maven.compiler.source>1.8</maven.compiler.source>
     	<log4j2.version>2.17.1</log4j2.version>
+		<dep.lombok>1.18.26</dep.lombok>
+		<dep.mapstruct>1.5.3.Final</dep.mapstruct>
+		<dep.spring.cloud>2021.0.5</dep.spring.cloud>
 	</properties>
 
 	<dependencyManagement>
@@ -26,6 +29,20 @@
 				<groupId>com.amazonaws</groupId>
 				<artifactId>aws-java-sdk-bom</artifactId>
 				<version>1.11.837</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-dependencies</artifactId>
+				<version>${dep.spring.cloud}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>software.amazon.awssdk</groupId>
+				<artifactId>bom</artifactId>
+				<version>2.17.219</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
@@ -38,12 +55,42 @@
 		<dependency>
 			<groupId>com.amazonaws.saas.eks</groupId>
 			<artifactId>error-handling</artifactId>
-			<version>1.0.12</version>
+			<version>1.0.26</version>
 		</dependency>
 		<dependency>
 			<groupId>com.amazonaws.saas.eks</groupId>
 			<artifactId>auth</artifactId>
-			<version>1.0.2-SNAPSHOT</version>
+			<version>1.0.9</version>
+		</dependency>
+		<dependency>
+			<groupId>com.amazonaws.saas.eks</groupId>
+			<artifactId>settings-domain</artifactId>
+			<version>1.0.18-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>com.amazonaws.saas.eks</groupId>
+			<artifactId>cashdrawer-domain</artifactId>
+			<version>1.0.9-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>com.amazonaws.saas.eks</groupId>
+			<artifactId>order-domain</artifactId>
+			<version>1.1.19-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>com.amazonaws.saas.eks</groupId>
+			<artifactId>payment-domain</artifactId>
+			<version>1.0.4-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>com.amazonaws.saas.eks</groupId>
+			<artifactId>product-domain</artifactId>
+			<version>1.1.5</version>
+		</dependency>
+		<dependency>
+			<groupId>com.amazonaws.saas.eks</groupId>
+			<artifactId>customer-domain</artifactId>
+			<version>1.0.5-SNAPSHOT</version>
 		</dependency>
 		<!-- -->
 
@@ -89,6 +136,64 @@
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-java-sdk-core</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>${dep.lombok}</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mapstruct</groupId>
+			<artifactId>mapstruct</artifactId>
+			<version>${dep.mapstruct}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-openfeign</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.hibernate.validator</groupId>
+			<artifactId>hibernate-validator</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.opensearch.client</groupId>
+			<artifactId>opensearch-java</artifactId>
+			<version>2.2.0</version>
+		</dependency>
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>auth</artifactId>
+			<version>2.17.219</version>
+		</dependency>
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>apache-client</artifactId>
+			<version>2.17.224</version>
+		</dependency>
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>regions</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpcore</artifactId>
+			<version>4.4.11</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.5.13</version>
+		</dependency>
+		<dependency>
+			<groupId>jakarta.json</groupId>
+			<artifactId>jakarta.json-api</artifactId>
+			<version>2.1.1</version>
+		</dependency>
+		<dependency>
+			<groupId>com.github.java-json-tools</groupId>
+			<artifactId>json-patch</artifactId>
+			<version>1.13</version>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -104,6 +209,18 @@
 				<configuration>
 					<source>11</source>
 					<target>11</target>
+					<annotationProcessorPaths>
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+							<version>${dep.lombok}</version>
+						</path>
+						<path>
+							<groupId>org.mapstruct</groupId>
+							<artifactId>mapstruct-processor</artifactId>
+							<version>${dep.mapstruct}</version>
+						</path>
+					</annotationProcessorPaths>
 				</configuration>
 			</plugin>
 		</plugins>
@@ -117,4 +234,3 @@
 		</repository>
 	</distributionManagement>
 </project>
-

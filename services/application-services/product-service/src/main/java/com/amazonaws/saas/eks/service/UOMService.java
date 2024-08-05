@@ -1,10 +1,11 @@
 package com.amazonaws.saas.eks.service;
 
-import com.amazonaws.saas.eks.dto.requests.uom.CreateUOMRequest;
-import com.amazonaws.saas.eks.dto.requests.uom.ListUOMRequestParams;
-import com.amazonaws.saas.eks.dto.requests.uom.UpdateUOMRequest;
-import com.amazonaws.saas.eks.dto.responses.uom.ListUOMResponse;
-import com.amazonaws.saas.eks.dto.responses.uom.UOMResponse;
+
+import com.amazonaws.saas.eks.product.dto.requests.uom.CreateUOMRequest;
+import com.amazonaws.saas.eks.product.dto.requests.uom.ListUOMRequestParams;
+import com.amazonaws.saas.eks.product.dto.requests.uom.UpdateUOMRequest;
+import com.amazonaws.saas.eks.product.dto.responses.uom.ListUOMResponse;
+import com.amazonaws.saas.eks.product.dto.responses.uom.UOMResponse;
 
 public interface UOMService {
     UOMResponse create(String tenantId, CreateUOMRequest request);

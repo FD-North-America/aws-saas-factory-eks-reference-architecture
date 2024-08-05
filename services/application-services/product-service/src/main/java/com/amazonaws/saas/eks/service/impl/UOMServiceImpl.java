@@ -1,16 +1,16 @@
 package com.amazonaws.saas.eks.service.impl;
 
-import com.amazonaws.saas.eks.dto.requests.uom.CreateUOMRequest;
-import com.amazonaws.saas.eks.dto.requests.uom.ListUOMRequestParams;
-import com.amazonaws.saas.eks.dto.requests.uom.UpdateUOMRequest;
-import com.amazonaws.saas.eks.dto.responses.uom.ListUOMResponse;
-import com.amazonaws.saas.eks.dto.responses.uom.UOMResponse;
 import com.amazonaws.saas.eks.exception.InvalidUOMNameException;
 import com.amazonaws.saas.eks.exception.InvalidUOMProductIdException;
-import com.amazonaws.saas.eks.mapper.UOMMapper;
-import com.amazonaws.saas.eks.model.Product;
-import com.amazonaws.saas.eks.model.Settings;
-import com.amazonaws.saas.eks.model.UOM;
+import com.amazonaws.saas.eks.product.dto.requests.uom.CreateUOMRequest;
+import com.amazonaws.saas.eks.product.dto.requests.uom.ListUOMRequestParams;
+import com.amazonaws.saas.eks.product.dto.requests.uom.UpdateUOMRequest;
+import com.amazonaws.saas.eks.product.dto.responses.uom.ListUOMResponse;
+import com.amazonaws.saas.eks.product.dto.responses.uom.UOMResponse;
+import com.amazonaws.saas.eks.product.mapper.UOMMapper;
+import com.amazonaws.saas.eks.product.model.Product;
+import com.amazonaws.saas.eks.product.model.UOM;
+import com.amazonaws.saas.eks.settings.model.Settings;
 import com.amazonaws.saas.eks.repository.ProductRepository;
 import com.amazonaws.saas.eks.repository.SettingsRepository;
 import com.amazonaws.saas.eks.repository.UOMRepository;
@@ -60,7 +60,7 @@ public class UOMServiceImpl implements UOMService {
     @Override
     public ListUOMResponse getAll(String tenantId, ListUOMRequestParams params) {
         ListUOMResponse response = new ListUOMResponse();
-        List<UOM> uomList = uomRepository.getUOMbyProductId(tenantId, params.getProductId());
+        List<UOM> uomList = uomRepository.getByProductId(tenantId, params.getProductId());
         List<UOMResponse> uomResponseList = uomList.stream().map(UOMMapper.INSTANCE::uomToUomResponse)
                 .collect(Collectors.toList());
         response.getUnitsOfMeasure().addAll(uomResponseList);

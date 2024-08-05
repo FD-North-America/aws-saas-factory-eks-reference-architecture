@@ -55,3 +55,10 @@ spec:
                 port:
                   number: 80
             pathType: Prefix
+          - path: /KUSTOMIZE_TENANT/workstations
+            backend:
+              service:
+                name: cashdrawer-service
+                port:
+                  number: 80
+            pathType: Prefix
