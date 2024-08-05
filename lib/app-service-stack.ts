@@ -19,6 +19,8 @@ export interface AppServiceStackProps extends StackProps {
     readonly ecrImageName: string
     readonly serviceUrlPrefix: string
     readonly serviceSourceDir: string
+
+    readonly newRepository?: boolean
 }
 
 export class AppServiceStack extends Stack {
@@ -34,7 +36,8 @@ export class AppServiceStack extends Stack {
             name: props.serviceName,
             ecrImageName: props.ecrImageName,
             serviceUrlPrefix: props.serviceUrlPrefix,
-            assetDirectory: path.join(__dirname, "..", "services", "application-services", props.serviceSourceDir)
+            assetDirectory: path.join(__dirname, "..", "services", "application-services", props.serviceSourceDir),
+            newRepository: props.newRepository
         });
         new CfnOutput(this, props.serviceName + "Repository", {
             value: appSvc.codeRepositoryUrl

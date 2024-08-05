@@ -125,7 +125,9 @@ const reportSingleAppSvcStack = new AppServiceStack(app, reportServiceName, {
     serviceName: reportServiceName,
     ecrImageName: "report-svc",
     serviceUrlPrefix: "reports",
-    serviceSourceDir: "report-service"
+    serviceSourceDir: "report-service",
+
+    newRepository: false
 });
 
 const cashDrawerServiceName = "CashDrawerService";
@@ -144,7 +146,9 @@ const cashDrawerSingleAppSvcStack = new AppServiceStack(app, cashDrawerServiceNa
     serviceName: cashDrawerServiceName,
     ecrImageName: "cashdrawer-svc",
     serviceUrlPrefix: "cashdrawers",
-    serviceSourceDir: "cashdrawer-service"
+    serviceSourceDir: "cashdrawer-service",
+
+    newRepository: false
 });
 
 const customerServiceName = "CustomerService";
@@ -163,7 +167,9 @@ const customerSingleAppSvcStack = new AppServiceStack(app, customerServiceName, 
     serviceName: customerServiceName,
     ecrImageName: "customer-svc",
     serviceUrlPrefix: "customers",
-    serviceSourceDir: "customer-service"
+    serviceSourceDir: "customer-service",
+
+    newRepository: false
 });
 
 const settingsServiceName = "SettingsService";
@@ -182,5 +188,7 @@ const settingsSingleAppSvcStack = new AppServiceStack(app, settingsServiceName, 
     serviceName: settingsServiceName,
     ecrImageName: "settings-svc",
     serviceUrlPrefix: "settings",
-    serviceSourceDir: "settings-service"
+    serviceSourceDir: "settings-service",
+
+    newRepository: false
 });

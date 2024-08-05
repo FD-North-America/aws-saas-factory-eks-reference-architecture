@@ -31,7 +31,8 @@ export class AppServicesStack extends Stack {
             name: "ProductService",
             ecrImageName: "product-svc",
             serviceUrlPrefix: "products",
-            assetDirectory: path.join(__dirname, "..", "services", "application-services", "product-service")
+            // assetDirectory: path.join(__dirname, "..", "services", "application-services", "product-service"),
+            newRepository: false
         });
         new CfnOutput(this, "ProductServiceRepository", {
             value: productSvc.codeRepositoryUrl
@@ -44,7 +45,8 @@ export class AppServicesStack extends Stack {
             name: "OrderService",
             ecrImageName: "order-svc",
             serviceUrlPrefix: "orders",
-            assetDirectory: path.join(__dirname, "..", "services", "application-services", "order-service")
+            // assetDirectory: path.join(__dirname, "..", "services", "application-services", "order-service"),
+            newRepository: false
         });
         new CfnOutput(this, "OrderServiceRepository", {
             value: orderSvc.codeRepositoryUrl
@@ -57,7 +59,8 @@ export class AppServicesStack extends Stack {
             name: "PaymentService",
             ecrImageName: "payment-svc",
             serviceUrlPrefix: "payments",
-            assetDirectory: path.join(__dirname, "..", "services", "application-services", "payment-service")
+            // assetDirectory: path.join(__dirname, "..", "services", "application-services", "payment-service"),
+            newRepository: false
         });
         new CfnOutput(this, "PaymentServiceRepository", {
             value: paymentSvc.codeRepositoryUrl

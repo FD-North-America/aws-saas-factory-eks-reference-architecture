@@ -9,14 +9,16 @@ import * as cr from 'aws-cdk-lib/custom-resources';
 
 export interface ApplicationServiceProps {
     readonly name: string
-    readonly assetDirectory: string
+    readonly assetDirectory?: string
     readonly ecrImageName: string
     readonly eksClusterName: string
     readonly codebuildKubectlRole: iam.IRole
     readonly internalApiDomain: string
-    readonly serviceUrlPrefix: string;
+    readonly serviceUrlPrefix: string
     
     readonly defaultBranchName?: string
+
+    readonly newRepository?: boolean
 }
 
 export class ApplicationService extends Construct {
@@ -27,12 +29,15 @@ export class ApplicationService extends Construct {
         super(scope, id);
 
         const defaultBranchName = props.defaultBranchName ?? "main";
+        
+        const sourceRepo = (props.newRepository ?? true)
+            ?  new codecommit.Repository(this, `${id}Repository`, {
+                repositoryName: props.name,
+                description: `Repository with code for ${props.name}`,
+                code: codecommit.Code.fromDirectory(props.assetDirectory ?? "", defaultBranchName)
+            })
+            : codecommit.Repository.fromRepositoryName(this, `${id}Repository`, props.name);
 
-        const sourceRepo = new codecommit.Repository(this, `${id}Repository`, {
-            repositoryName: props.name,
-            description: `Repository with code for ${props.name}`,
-            code: codecommit.Code.fromDirectory(props.assetDirectory, defaultBranchName)
-        });
         this.codeRepositoryUrl = sourceRepo.repositoryCloneUrlHttp;
 
         const containerRepo = new ecr.Repository(this, `${id}ECR`, {
