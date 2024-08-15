@@ -192,3 +192,24 @@ const settingsSingleAppSvcStack = new AppServiceStack(app, settingsServiceName, 
 
     newRepository: false
 });
+
+const purchasingServiceName = "PurchasingService";
+const purchasingSingleAppSvcStack = new AppServiceStack(app, purchasingServiceName, {
+    env,
+    internalNLBApiDomain: clusterStack.nlbDomain,
+    eksClusterName: clusterName,
+    eksClusterOIDCProviderArn: clusterStack.openIdConnectProviderArn,
+    codebuildKubectlRoleArn: clusterStack.codebuildKubectlRoleArn,
+    appSiteDistributionId: sitesStack.applicationSiteDistribution.distributionId,
+    appSiteCloudFrontDomain: sitesStack.applicationSiteDistribution.distributionDomainName,
+    sharedServiceAccountName: sharedServiceAccountName,
+    appHostedZoneId: hostedZoneId,
+    customDomain: customDomain,
+    
+    serviceName: purchasingServiceName,
+    ecrImageName: "purchasing-svc",
+    serviceUrlPrefix: "purchasing",
+    serviceSourceDir: "purchasing-service",
+
+    newRepository: false
+});
